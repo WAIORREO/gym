@@ -28,23 +28,46 @@ export const getBearerToken = () => {
 	return undefined;
 };
 
-export const useApi = (headers = {}) => {
-	let base = PUBLIC_API_URL;
+export const normalizeApiBaseUrl = (raw) => {
+	let str = typeof raw === 'string' ? raw.trim() : '';
 
-	// In Node.js server runtime (like on Render), read dynamically from process.env
+	// Remove wrapping quotes if entered in Render environment UI
+	str = str.replace(/^["']+|["']+$/g, '').trim();
+
+	if (!str) {
+		return 'http://localhost:8000/api';
+	}
+
+	// Auto-prepend https:// if user pasted just the domain (e.g. gym-api.onrender.com)
+	if (!/^https?:\/\//i.test(str)) {
+		str = 'https://' + str;
+	}
+
+	// Remove trailing slashes
+	str = str.replace(/\/+$/, '');
+
+	// Ensure /api suffix
+	if (!str.endsWith('/api')) {
+		str = str + '/api';
+	}
+
+	return str;
+};
+
+export const useApi = (headers = {}) => {
+	let base = '';
+
 	if (typeof process !== 'undefined' && process.env && process.env.PUBLIC_API_URL) {
 		base = process.env.PUBLIC_API_URL;
+	} else if (PUBLIC_API_URL) {
+		base = PUBLIC_API_URL;
 	}
 
-	if (!base) {
-		base = 'http://localhost:8000';
-	}
-
-	base = base.replace(/\/+$/, '');
+	const baseURL = normalizeApiBaseUrl(base);
 
 	return axios.create({
 		headers,
-		baseURL: base + '/api',
-		timeout: 20000 // 20s timeout in case free tier server is waking up
+		baseURL,
+		timeout: 30000 // 30s timeout in case free tier service is waking up
 	});
 };

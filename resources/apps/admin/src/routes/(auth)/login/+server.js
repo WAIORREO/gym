@@ -12,7 +12,16 @@ export const POST = async ({ request, cookies }) => {
 			.then((res) => res.data)
 			.catch((error) => {
 				const errorData = error.response ? error.response.data : null;
-				const message = errorData?.message || error.message || 'تعذر الاتصال بخادم الـ API';
+				let message = errorData?.message || error.message || 'تعذر الاتصال بخادم الـ API';
+
+				if (error.code === 'ECONNREFUSED' || error.message?.includes('ECONNREFUSED')) {
+					message = 'سيرفر الـ API غير متصل أو لم يكتمل تشغيله بعد. تأكد من تشغيل gym-api على Render';
+				} else if (error.message?.includes('Invalid URL')) {
+					message = 'رابط الـ API غير صالح. يرجى مراجعة PUBLIC_API_URL في إعدادات Render';
+				} else if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
+					message = 'انتهت مهلة الاتصال بالـ API. قد يكون السيرفر في وضع النوم (Spinning up)';
+				}
+
 				return { errors: true, message, details: errorData };
 			});
 
@@ -37,7 +46,7 @@ export const POST = async ({ request, cookies }) => {
 			);
 		}
 
-		// Set cookie securely
+		// Set cookie
 		cookies.set('token', response.access_token, {
 			path: '/',
 			httpOnly: false,
