@@ -1,37 +1,56 @@
 <script>
 	// @ts-nocheck
-
 	import { useToast } from '$lib/toast';
-
 	import axios from 'axios';
 
 	const toast = useToast();
 
 	let fields = $state({ email: '', password: '' });
-
 	let loading = $state(false);
 
-	const onSubmit = (event) => {
+	const onSubmit = async (event) => {
 		event.preventDefault();
 		if (loading) return;
-		axios
-			.post('/login', fields)
-			.then(() => {
+		loading = true;
+
+		try {
+			const response = await axios.post('/login', fields);
+
+			if (response.data && response.data.success) {
+				// Store in localStorage as backup
+				if (response.data.access_token) {
+					try {
+						localStorage.setItem('access_token', response.data.access_token);
+					} catch (e) {}
+				}
+
 				toast.trigger({
-					message: 'You have successfully logged in. Redirecting...',
+					message: 'تم تسجيل الدخول بنجاح! جاري التحويل...',
 					background: 'variant-filled-success'
 				});
-				setTimeout(() => (window.location.href = '/'), 1500);
-			})
-			.catch((error) => {
+
+				setTimeout(() => {
+					window.location.href = '/gate';
+				}, 600);
+			} else {
 				toast.trigger({
-					message: 'Unable to logged you in',
+					message: response.data?.message || 'فشل تسجيل الدخول، تأكد من صحة البيانات',
 					background: 'variant-filled-error'
 				});
-			})
-			.finally(() => {
-				loading = false;
+			}
+		} catch (error) {
+			const msg =
+				error.response?.data?.message ||
+				error.message ||
+				'تعذر تسجيل الدخول، تأكد من تشغيل سيرفر الـ API';
+
+			toast.trigger({
+				message: msg,
+				background: 'variant-filled-error'
 			});
+		} finally {
+			loading = false;
+		}
 	};
 </script>
 
@@ -50,7 +69,7 @@
 				name="email"
 				type="email"
 				disabled={loading}
-				placeholder="john@doe.com"
+				placeholder="admin@admin.com"
 				required
 			/>
 		</label>
@@ -64,16 +83,24 @@
 				bind:value={fields.password}
 				name="password"
 				type="password"
-				placeholder=""
+				placeholder="password"
 				disabled={loading}
 				required
 			/>
 		</label>
 	</div>
+
 	<button
 		type="submit"
 		disabled={loading}
-		class="variant-filled-primary btn w-full font-bold text-white">Login</button
+		class="variant-filled-primary btn w-full font-bold text-white"
 	>
-	<a href="/forgot" class="block pt-2 text-center">Forgot password </a>
+		{#if loading}
+			جاري تسجيل الدخول...
+		{:else}
+			Login
+		{/if}
+	</button>
+
+	<a href="/forgot" class="block pt-2 text-center">Forgot password</a>
 </form>
