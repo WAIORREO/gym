@@ -42,6 +42,7 @@ class PackageController extends Controller
         $package = Package::create($request->only([
             'name',
             'amount',
+            'sessions',
             'status',
             'cycle_id',
         ]));
@@ -78,6 +79,7 @@ class PackageController extends Controller
         $result = $package->update($request->only([
             'name',
             'amount',
+            'sessions',
             'status',
             'cycle_id',
         ]));

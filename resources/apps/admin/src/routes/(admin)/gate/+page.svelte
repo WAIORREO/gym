@@ -446,14 +446,35 @@
 							class="badge border border-emerald-500/30 bg-emerald-500/10 text-xs font-mono text-emerald-300 hover:bg-emerald-500/20"
 							onclick={() => processCheckIn('RFID123456')}
 						>
-							{$t('gate_test_active', 'بطاقة صالحة')} (RFID123456)
+							{$t('gate_test_active', 'بطاقة نشطة')} (10/12)
+						</button>
+						<button
+							type="button"
+							class="badge border border-blue-500/30 bg-blue-500/10 text-xs font-mono text-blue-300 hover:bg-blue-500/20"
+							onclick={() => processCheckIn('RFID654321')}
+						>
+							{$t('gate_test_second', 'بطاقة مفتوحة')}
+						</button>
+						<button
+							type="button"
+							class="badge border border-amber-500/30 bg-amber-500/10 text-xs font-mono text-amber-300 hover:bg-amber-500/20"
+							onclick={() => processCheckIn('RFID_DEPLETED')}
+						>
+							{$t('gate_test_depleted', 'حصص مكتملة')}
 						</button>
 						<button
 							type="button"
 							class="badge border border-rose-500/30 bg-rose-500/10 text-xs font-mono text-rose-300 hover:bg-rose-500/20"
+							onclick={() => processCheckIn('RFID_EXPIRED')}
+						>
+							{$t('gate_test_expired', 'مدة منتهية')}
+						</button>
+						<button
+							type="button"
+							class="badge border border-slate-700 bg-slate-800 text-xs font-mono text-slate-400 hover:bg-slate-700"
 							onclick={() => processCheckIn('UNKNOWN_999')}
 						>
-							{$t('gate_test_unregistered', 'بطاقة غير مسجلة')}
+							{$t('gate_test_unregistered', 'غير مسجلة')}
 						</button>
 					</div>
 				</div>
@@ -520,37 +541,61 @@
 						<span class="text-emerald-400">{$t('gate_rfid_card', 'بطاقة')}: {memberData.member.rfid_card_id || 'RFID'}</span>
 					</div>
 
-					<!-- Subscription Info Cards -->
+					<!-- Subscription Info Cards: Package, Duration & Sessions -->
 					<div class="mt-6 grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
+						<!-- Card 1: Package -->
 						<div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-4">
 							<div class="text-xs text-slate-400">{$t('gate_package', 'الباقة الحالية')}</div>
-							<div class="mt-1 text-base font-bold text-white">
+							<div class="mt-1 text-base font-bold text-white truncate">
 								{memberData.subscription.package_name}
 							</div>
+							<div class="mt-1 text-xs text-slate-500">
+								{memberData.subscription.cycle_name || ''}
+							</div>
 						</div>
+
+						<!-- Card 2: Duration Expiry -->
 						<div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-4">
 							<div class="text-xs text-slate-400">{$t('gate_expires_at', 'تاريخ الانتهاء')}</div>
 							<div class="mt-1 font-mono text-base font-bold text-white">
-								{memberData.subscription.expires_at}
+								{memberData.subscription.expires_at || $t('gate_active', 'مفتوح')}
+							</div>
+							<div class="mt-1 text-xs text-emerald-400 font-medium">
+								{memberData.subscription.days_left !== null
+									? `${memberData.subscription.days_left} ${$t('gate_days', 'يوم')} ${$t('gate_days_left', 'متبقية')}`
+									: $t('gate_active', 'ساري')}
 							</div>
 						</div>
+
+						<!-- Card 3: Sessions Count -->
 						<div
-							class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-300"
+							class="rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4 text-blue-200"
 						>
-							<div class="text-xs text-emerald-400">{$t('gate_days_left', 'الأيام المتبقية')}</div>
-							<div class="mt-1 font-mono text-xl font-black">
-								{memberData.subscription.days_left !== null
-									? `${memberData.subscription.days_left} ${$t('gate_days', 'يوم')}`
-									: $t('gate_active', 'مفتوح')}
-							</div>
+							<div class="text-xs text-blue-300">{$t('gate_sessions_left', 'الحصص المتبقية')}</div>
+							{#if memberData.subscription.is_unlimited_sessions}
+								<div class="mt-1 font-bold text-lg text-emerald-300">
+									{$t('gate_unlimited_sessions', 'غير محدود')}
+								</div>
+								<div class="mt-1 text-xs text-slate-400">
+									{$t('gate_active', 'ساري المفعول')}
+								</div>
+							{:else}
+								<div class="mt-1 font-mono text-2xl font-black text-white">
+									<span class="text-emerald-400">{memberData.subscription.remaining_sessions}</span>
+									<span class="text-sm font-normal text-slate-400"> / {memberData.subscription.total_sessions}</span>
+								</div>
+								<div class="mt-1 text-xs text-blue-300">
+									{memberData.subscription.remaining_sessions} {$t('gate_sessions', 'حصة')} {$t('gate_sessions_left', 'متبقية')}
+								</div>
+							{/if}
 						</div>
 					</div>
 
 					<!-- Message -->
 					<div class="mt-6 text-base font-semibold text-emerald-400">
 						{$currentLang === 'fr' 
-							? ($t('gate_verified_success')) 
-							: (memberData.message || $t('gate_verified_success'))}
+							? (memberData.message_fr || memberData.message || $t('gate_verified_success')) 
+							: (memberData.message_ar || memberData.message || $t('gate_verified_success'))}
 					</div>
 
 					<!-- Auto Reset Bar -->
@@ -614,8 +659,12 @@
 								<div class="text-xs text-slate-400">{$t('gate_account_num', 'رقم الحساب')}: {errorData.member.account_number}</div>
 							</div>
 							{#if errorData.lastSubscription}
-								<div class="rounded-lg bg-rose-950/60 px-3 py-1 text-xs text-rose-300">
-									{$t('gate_expired', 'انتهى في')}: {errorData.lastSubscription.expires_at}
+								<div class="rounded-lg bg-rose-950/60 px-3 py-1.5 text-xs text-rose-300 font-semibold">
+									{#if errorData.statusCode === 'SESSIONS_DEPLETED' || errorData.lastSubscription.is_depleted}
+										<span>{$t('gate_sessions_depleted', 'حصص مكتملة')}: {errorData.lastSubscription.sessions_used || errorData.lastSubscription.total_sessions} / {errorData.lastSubscription.total_sessions}</span>
+									{:else if errorData.lastSubscription.expires_at}
+										<span>{$t('gate_expired', 'انتهت المدة في')}: {errorData.lastSubscription.expires_at}</span>
+									{/if}
 								</div>
 							{/if}
 						</div>

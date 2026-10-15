@@ -59,10 +59,17 @@ class SubscriptionController extends Controller
 
         $interval = $request->has('interval') ? $request->interval : 1;
 
+        $totalSessions = $request->has('total_sessions')
+            ? $request->input('total_sessions')
+            : ($package->sessions ? ($package->sessions * $interval) : null);
+
         $model = Subscription::create([
             'package_id' => $request->package_id,
             'user_id' => $request->user_id,
             'interval' => $interval,
+            'total_sessions' => $totalSessions,
+            'remaining_sessions' => $totalSessions,
+            'sessions_used' => 0,
             'expires_at' => Carbon::now()->addDays($package->cycle->num_days * $interval),
         ]);
 
@@ -94,6 +101,9 @@ class SubscriptionController extends Controller
         $params = $request->only([
             'status',
             'expires_at',
+            'total_sessions',
+            'remaining_sessions',
+            'sessions_used',
         ]);
 
         if ($request->has('package_id') && $request->package_id != $subscription->package_id) {

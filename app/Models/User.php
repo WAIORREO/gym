@@ -115,6 +115,10 @@ class User extends Authenticatable implements MustVerifyEmail
                 $query->whereNull('expires_at')
                       ->orWhere('expires_at', '>=', now()->startOfDay());
             })
+            ->where(function ($query) {
+                $query->whereNull('remaining_sessions')
+                      ->orWhere('remaining_sessions', '>', 0);
+            })
             ->latest('id')
             ->first();
     }

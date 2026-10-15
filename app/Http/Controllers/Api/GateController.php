@@ -86,20 +86,34 @@ class GateController extends Controller
                 ? Carbon::parse($latest->expires_at)->format('Y-m-d')
                 : null;
 
+            $isDepleted = ($latest && !is_null($latest->total_sessions) && $latest->remaining_sessions <= 0);
+            $isDateExpired = ($latest && $latest->expires_at && Carbon::parse($latest->expires_at)->endOfDay()->isPast());
+
+            if ($isDepleted) {
+                $statusCode = 'SESSIONS_DEPLETED';
+                $msgAr = "لقد أكملت جميع الحصص المتاحة في اشتراكك ({$latest->total_sessions} حصة)، يرجى تجديد الاشتراك للمتابعة";
+                $msgFr = "Vous avez terminé toutes les séances de votre abonnement ({$latest->total_sessions} séances). Veuillez renouveler votre abonnement.";
+                $msgEn = "You have completed all sessions of your subscription ({$latest->total_sessions} sessions). Please renew.";
+            } elseif ($isDateExpired) {
+                $statusCode = 'SUBSCRIPTION_EXPIRED';
+                $msgAr = "انتهت مدة اشتراكك منذ ($expiredDate)، يرجى تجديد الاشتراك للمتابعة";
+                $msgFr = "La durée de votre abonnement a expiré le ($expiredDate). Veuillez renouveler votre abonnement.";
+                $msgEn = "Your subscription duration has expired on ($expiredDate). Please renew.";
+            } else {
+                $statusCode = 'NO_ACTIVE_SUBSCRIPTION';
+                $msgAr = 'لا يوجد اشتراك نشط لهذا العضو، يرجى مراجعة الاستقبال';
+                $msgFr = 'Aucun abonnement actif trouvé pour ce membre. Veuillez voir la réception.';
+                $msgEn = 'No active subscription found for this member.';
+            }
+
             return response()->json([
                 'success' => false,
                 'access_granted' => false,
-                'status_code' => 'SUBSCRIPTION_EXPIRED',
-                'message' => $expiredDate 
-                    ? "اشتراكك منتهي منذ ($expiredDate)، يرجى التجديد للاستمرار"
-                    : 'لا يوجد اشتراك نشط لهذا العضو، يرجى مراجعة الاستقبال',
-                'message_ar' => $expiredDate 
-                    ? "اشتراكك منتهي منذ ($expiredDate)، يرجى التجديد للاستمرار"
-                    : 'لا يوجد اشتراك نشط لهذا العضو، يرجى مراجعة الاستقبال',
-                'message_fr' => $expiredDate
-                    ? "Votre abonnement a expiré le ($expiredDate), veuillez le renouveler"
-                    : 'Aucun abonnement actif trouvé pour ce membre',
-                'message_en' => 'Subscription has expired or is not active',
+                'status_code' => $statusCode,
+                'message' => $msgAr,
+                'message_ar' => $msgAr,
+                'message_fr' => $msgFr,
+                'message_en' => $msgEn,
                 'member' => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -110,7 +124,12 @@ class GateController extends Controller
                 ],
                 'last_subscription' => $latest ? [
                     'package_name' => $latest->package ? $latest->package->name : 'باقة سابقة',
-                    'expires_at' => $expiredDate
+                    'expires_at' => $expiredDate,
+                    'total_sessions' => $latest->total_sessions,
+                    'remaining_sessions' => $latest->remaining_sessions,
+                    'sessions_used' => $latest->sessions_used ?? 0,
+                    'is_depleted' => $isDepleted,
+                    'is_date_expired' => $isDateExpired
                 ] : null
             ], 403);
         }
@@ -147,6 +166,18 @@ class GateController extends Controller
                 'entity' => 'user',
                 'description' => 'تسجيل دخول عبر بوابة RFID (Gate Entry)'
             ]);
+
+            // Deduct 1 session if subscription tracks session counts
+            if (!is_null($subscription->total_sessions) && $subscription->remaining_sessions > 0) {
+                $subscription->decrement('remaining_sessions');
+                $subscription->increment('sessions_used');
+                $subscription->refresh();
+
+                // If remaining sessions reach 0, mark as completed
+                if ($subscription->remaining_sessions <= 0) {
+                    $subscription->update(['status' => 'completed']);
+                }
+            }
         }
 
         // Calculate remaining days
@@ -187,9 +218,13 @@ class GateController extends Controller
                 'id' => $subscription->id,
                 'package_name' => $subscription->package ? $subscription->package->name : 'باقة عامة',
                 'cycle_name' => $subscription->cycle ? $subscription->cycle->name : 'شهري',
-                'expires_at' => $subscription->expires_at ? Carbon::parse($subscription->expires_at)->format('Y-m-d') : 'مفتوح',
+                'expires_at' => $subscription->expires_at ? Carbon::parse($subscription->expires_at)->format('Y-m-d') : null,
                 'days_left' => $daysLeft,
-                'is_expiring_soon' => ($daysLeft !== null && $daysLeft <= 5)
+                'total_sessions' => $subscription->total_sessions,
+                'remaining_sessions' => $subscription->remaining_sessions,
+                'sessions_used' => $subscription->sessions_used ?? 0,
+                'is_unlimited_sessions' => is_null($subscription->total_sessions),
+                'is_expiring_soon' => ($daysLeft !== null && $daysLeft <= 5) || (!is_null($subscription->remaining_sessions) && $subscription->remaining_sessions <= 2)
             ],
             'branch' => $branch ? [
                 'id' => $branch->id,

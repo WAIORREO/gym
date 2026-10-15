@@ -116,6 +116,95 @@ class GateTest extends TestCase
         ]);
     }
 
+    public function test_fails_when_sessions_are_depleted()
+    {
+        $bearer = $this->getAdminAuth();
+
+        $cycle = Cycle::create(['name' => 'Monthly', 'days' => 30]);
+        $package = Package::create(['name' => 'Session Package', 'cycle_id' => $cycle->id, 'description' => 'Test', 'amount' => 50, 'sessions' => 10]);
+
+        $member = User::create([
+            'name' => 'Yassine Depleted',
+            'email' => 'depleted@example.com',
+            'password' => bcrypt('password'),
+            'rfid_card_id' => 'CARD_DEPLETED_7788',
+            'status' => 'active',
+            'is_admin' => false
+        ]);
+
+        Subscription::create([
+            'user_id' => $member->id,
+            'package_id' => $package->id,
+            'interval' => 1,
+            'total_sessions' => 10,
+            'remaining_sessions' => 0, // Depleted!
+            'sessions_used' => 10,
+            'status' => 'completed',
+            'expires_at' => now()->addDays(20)
+        ]);
+
+        $response = $this->postJson('/api/gate/check-in', [
+            'rfid_card_id' => 'CARD_DEPLETED_7788'
+        ], [
+            'Authorization' => $bearer
+        ]);
+
+        $response->assertStatus(403);
+        $response->assertJson([
+            'success' => false,
+            'access_granted' => false,
+            'status_code' => 'SESSIONS_DEPLETED'
+        ]);
+    }
+
+    public function test_decrements_remaining_sessions_on_check_in()
+    {
+        $bearer = $this->getAdminAuth();
+
+        $cycle = Cycle::create(['name' => 'Monthly', 'days' => 30]);
+        $package = Package::create(['name' => '10 Sessions Pack', 'cycle_id' => $cycle->id, 'description' => 'Test', 'amount' => 50, 'sessions' => 10]);
+
+        $member = User::create([
+            'name' => 'Karim Active',
+            'email' => 'karim@example.com',
+            'password' => bcrypt('password'),
+            'rfid_card_id' => 'CARD_KARIM_123',
+            'status' => 'active',
+            'is_admin' => false
+        ]);
+
+        $sub = Subscription::create([
+            'user_id' => $member->id,
+            'package_id' => $package->id,
+            'interval' => 1,
+            'total_sessions' => 10,
+            'remaining_sessions' => 10,
+            'sessions_used' => 0,
+            'status' => 'active',
+            'expires_at' => now()->addDays(20)
+        ]);
+
+        $response = $this->postJson('/api/gate/check-in', [
+            'rfid_card_id' => 'CARD_KARIM_123'
+        ], [
+            'Authorization' => $bearer
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'access_granted' => true,
+            'subscription' => [
+                'total_sessions' => 10,
+                'remaining_sessions' => 9,
+                'sessions_used' => 1
+            ]
+        ]);
+
+        $this->assertEquals(9, $sub->fresh()->remaining_sessions);
+        $this->assertEquals(1, $sub->fresh()->sessions_used);
+    }
+
     public function test_can_get_recent_gate_entries()
     {
         $bearer = $this->getAdminAuth();

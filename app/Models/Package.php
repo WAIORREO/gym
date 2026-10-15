@@ -15,11 +15,13 @@ class Package extends Model
 
     protected $casts = [
         'cycle_id' => 'int',
+        'sessions' => 'int',
         'amount' => 'float',
     ];
 
     protected $fillable = [
         'cycle_id',
+        'sessions',
         'amount',
         'name',
         'status'

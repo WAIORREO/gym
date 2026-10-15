@@ -46,5 +46,27 @@ class UserSeeder extends Seeder
             'account_number' => '000000000102',
             'avatar' => null
         ]);
+
+        User::create([
+            'name' => 'ياسين بن علي (حصصه مكتملة)',
+            'email' => 'yassine@laragym.com',
+            'is_admin' => false,
+            'status' => 'active',
+            'password' => bcrypt('password'),
+            'rfid_card_id' => 'RFID_DEPLETED',
+            'account_number' => '000000000103',
+            'avatar' => null
+        ]);
+
+        User::create([
+            'name' => 'خالد مراد (اشتراك منتهي المدة)',
+            'email' => 'khaled@laragym.com',
+            'is_admin' => false,
+            'status' => 'active',
+            'password' => bcrypt('password'),
+            'rfid_card_id' => 'RFID_EXPIRED',
+            'account_number' => '000000000104',
+            'avatar' => null
+        ]);
     }
 }
