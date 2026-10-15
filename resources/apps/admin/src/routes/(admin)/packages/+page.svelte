@@ -1,5 +1,6 @@
 <script>
 	// @ts-nocheck
+ import { t } from "$lib/i18n.js";
 	import { goto } from '$app/navigation';
 	import { getBearerToken, useApi } from '$lib/api';
 	import { Paginator } from '@skeletonlabs/skeleton';
@@ -23,10 +24,10 @@
 		amounts: [5, 10, 15, 20, 40, 60, 100]
 	});
 
-	let title = 'Manage Packages';
+	const title = $derived($t('nav_packages'));
 
 	const onDelete = (id) => {
-		const confirm = window.confirm('are you sure you wanna delete this item?');
+		const confirm = window.confirm($t('ui_delete_confirm'));
 		if (confirm) {
 			items = items.filter((v) => v.id != id);
 			paginationSettings.size = paginationSettings.size - 1;
@@ -60,8 +61,8 @@
 </svelte:head>
 
 <div class="p-4 lg:p-6">
-	<div class="card bg-white p-4 lg:p-6">
-		<header class="card-header mb-6 flex items-center">
+	<div class="card rounded-2xl border border-surface-300/40 bg-white p-4 dark:bg-surface-800 lg:p-6">
+		<header class="card-header mb-6 flex flex-wrap items-center gap-3">
 			<h3 class="h3">{title}</h3>
 			<div class="flex-1"></div>
 			<button
@@ -69,7 +70,7 @@
 				class="btn variant-filled-primary text-white"
 				onclick={() => goto('/packages/new')}
 			>
-				Add Item
+				{$t('ui_add')}
 			</button>
 		</header>
 		<!-- Responsive Container (recommended) -->
@@ -78,13 +79,13 @@
 			<table class="table-hover table bg-white">
 				<thead>
 					<tr>
-						<th>ID</th>
-						<th>Name</th>
-						<th>Billing Cycle</th>
-						<th>Services</th>
-						<th>Price</th>
-						<th>Status</th>
-						<th>Action</th>
+						<th>{$t('ui_id')}</th>
+						<th>{$t('ui_name')}</th>
+						<th>{$t('ui_cycle')}</th>
+						<th>{$t('ui_services')}</th>
+						<th>{$t('ui_price')}</th>
+						<th>{$t('ui_status')}</th>
+						<th>{$t('ui_action')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -110,7 +111,7 @@
 								<button
 									type="button"
 									class="btn-icon variant-filled-primary"
-									onclick={() => onEdit(item.id)}
+									aria-label={$t("common_edit")} onclick={() => onEdit(item.id)}
 								>
 									<span class="h-4 w-4 text-white">
 										<EditIcon />
@@ -119,7 +120,7 @@
 								<button
 									type="button"
 									class="btn-icon variant-filled-error"
-									onclick={() => onDelete(item.id)}
+									aria-label={$t("common_delete")} onclick={() => onDelete(item.id)}
 								>
 									<span class="h-4 w-4 text-white">
 										<DeleteIcon />
@@ -131,7 +132,7 @@
 				</tbody>
 				<tfoot>
 					<tr>
-						<th colspan="3" class="bg-white">Results Found {paginationSettings.size}</th
+						<th colspan="3" class="bg-white">{$t('ui_results')} {paginationSettings.size}</th
 						>
 						<td class="bg-white"></td>
 					</tr>

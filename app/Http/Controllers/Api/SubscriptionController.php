@@ -55,34 +55,7 @@ class SubscriptionController extends Controller
      */
     public function store(StoreSubscriptionRequest $request)
     {
-        $package = Package::findOrFail($request->package_id);
-
-        $interval = $request->has('interval') ? $request->interval : 1;
-
-        $totalSessions = $request->has('total_sessions')
-            ? $request->input('total_sessions')
-            : ($package->sessions ? ($package->sessions * $interval) : null);
-
-        $remainingSessions = $request->has('remaining_sessions')
-            ? $request->input('remaining_sessions')
-            : $totalSessions;
-
-        $expiresAt = $request->filled('expires_at')
-            ? Carbon::parse($request->expires_at)
-            : Carbon::now()->addDays($package->cycle->num_days * $interval);
-
-        $model = Subscription::create([
-            'package_id' => $request->package_id,
-            'user_id' => $request->user_id,
-            'interval' => $interval,
-            'total_sessions' => $totalSessions,
-            'remaining_sessions' => $remainingSessions,
-            'sessions_used' => 0,
-            'expires_at' => $expiresAt,
-            'status' => $request->input('status', 'active'),
-        ]);
-
-        return response()->json($model);
+        return response()->json(app(\App\Services\MembershipService::class)->save($request->validated()));
     }
 
     /**
@@ -107,38 +80,24 @@ class SubscriptionController extends Controller
      */
     public function update(UpdateSubscriptionRequest $request, Subscription $subscription)
     {
-        $params = $request->only([
-            'status',
-            'expires_at',
-            'total_sessions',
-            'remaining_sessions',
-            'sessions_used',
-            'interval',
-        ]);
+        return response()->json(app(\App\Services\MembershipService::class)->save($request->validated(), $subscription));
+    }
 
-        if ($request->filled('expires_at')) {
-            $params['expires_at'] = Carbon::parse($request->expires_at);
-        } elseif ($request->has('package_id') && $request->package_id != $subscription->package_id) {
-            $package = Package::findOrFail($request->package_id);
-
-            $interval = $request->has('interval') ? $request->interval : $subscription->interval;
-
-            $params['expires_at'] = Carbon::now()->addDays($package->cycle->num_days * $interval);
-        }
-
-        if ($request->has('status') && $request->status === 'suspended') {
-            $params['suspended_at'] = Carbon::now();
-        }
-
-        if ($request->has('user_id')) {
-            $params['user_id'] = $request->user_id;
-        }
-
-        $subscription->update($params);
-
-        $subscription->fresh();
-
-        return response()->json($subscription);
+    /**
+     * Renew an existing subscription.
+     * Sets start date to today (or extends from previous expiry if still active),
+     * calculates new end date based on duration, and resets sessions.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Subscription  $subscription
+     * @return \Illuminate\Http\Response
+     */
+    public function renew(Request $request, Subscription $subscription)
+    {
+        $data = $request->validate(['package_id'=>'sometimes|required|integer|exists:packages,id',
+            'interval'=>'sometimes|required|integer|min:1|max:120','total_sessions'=>'nullable|integer|min:1|max:100000']);
+        $renewed = app(\App\Services\MembershipService::class)->renew($subscription, $data);
+        return response()->json(['message'=>__('membership.renewed'),'subscription'=>$renewed], 201);
     }
 
     /**
@@ -147,6 +106,19 @@ class SubscriptionController extends Controller
      * @param  \App\Models\Subscription  $subscription
      * @return \Illuminate\Http\Response
      */
+    public function transition(Request $request, Subscription $subscription)
+    {
+        $data = $request->validate(['action'=>'required|in:freeze,resume']);
+        $expected = $data['action'] === 'freeze' ? 'active' : 'suspended';
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($data, $subscription, $expected) {
+            $subscription = Subscription::whereKey($subscription->id)->lockForUpdate()->firstOrFail();
+            abort_unless($subscription->effective_status === $expected, 422, __('membership.invalid_transition'));
+            return response()->json(app(\App\Services\MembershipService::class)->save([
+                'status'=>$data['action'] === 'freeze' ? 'suspended' : 'active'
+            ], $subscription));
+        });
+    }
+
     public function destroy(Subscription $subscription)
     {
         $subscription->delete();

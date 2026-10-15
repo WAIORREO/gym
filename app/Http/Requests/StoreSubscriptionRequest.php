@@ -26,11 +26,12 @@ class StoreSubscriptionRequest extends FormRequest
         return [
             'package_id' => 'required|exists:packages,id',
             'user_id' => 'required|exists:users,id',
-            'interval' => 'nullable|numeric|min:1',
-            'status' => 'nullable|in:active,inactive,expired,suspended,completed',
-            'total_sessions' => 'nullable|integer|min:0',
-            'remaining_sessions' => 'nullable|integer|min:0',
-            'expires_at' => 'nullable|date',
+            'interval' => 'sometimes|required|integer|min:1|max:120',
+            'status' => 'sometimes|required|in:active,inactive,expired,suspended,completed',
+            'total_sessions' => 'nullable|integer|min:0|max:100000',
+            'remaining_sessions' => 'nullable|integer|min:0|max:100000',
+            'starts_at' => 'nullable|date',
+            'expires_at' => 'sometimes|required|date',
         ];
     }
 }

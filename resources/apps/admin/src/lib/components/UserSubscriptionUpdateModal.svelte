@@ -32,6 +32,7 @@
 		total_sessions: 12,
 		remaining_sessions: 12,
 		sessions_used: 0,
+		starts_at: '',
 		expires_at: ''
 	});
 
@@ -46,6 +47,7 @@
 			fields.total_sessions = subscription.total_sessions !== null ? subscription.total_sessions : 12;
 			fields.remaining_sessions = subscription.remaining_sessions !== null ? subscription.remaining_sessions : 12;
 			fields.sessions_used = subscription.sessions_used || 0;
+			fields.starts_at = formatDateForInput(subscription.starts_at || subscription.created_at || moment());
 			fields.expires_at = formatDateForInput(subscription.expires_at);
 		}
 	});
@@ -55,9 +57,7 @@
 		const current = Number(fields.remaining_sessions) || 0;
 		const updated = Math.max(0, current + delta);
 		fields.remaining_sessions = updated;
-		if (updated > Number(fields.total_sessions)) {
-			fields.total_sessions = updated;
-		}
+		fields.total_sessions = updated + Number(fields.sessions_used || 0);
 		if (updated > 0 && fields.status === 'completed') {
 			fields.status = 'active';
 		}
@@ -69,6 +69,37 @@
 		if (fields.status === 'expired') {
 			fields.status = 'active';
 		}
+	};
+
+	// Renewal: Extends end date, resets sessions, activates status
+ const triggerRenewalCalculation = () => {
+  const days = (fields.package?.cycle?.num_days || 30) * (Number(fields.interval) || 1);
+  fields.expires_at = formatDateForInput(moment(fields.starts_at || moment()).add(days - 1, 'days'));
+ };
+
+	const onDirectRenewApi = () => {
+ if (!window.confirm($t("sub_renew_confirm"))) return;
+		loading = true;
+		api.post(`/subscriptions/${subscription.id}/renew`, {
+			package_id: fields.package?.id || subscription.package_id,
+			interval: Number(fields.interval) || 1,
+			total_sessions: fields.isLimitedSessions ? Number(fields.total_sessions) : null
+		})
+			.then((res) => {
+				toast.trigger({
+					message: $t('sub_renew_success', 'Subscription renewed successfully!'),
+					background: 'variant-filled-success'
+				});
+				window.dispatchEvent(new CustomEvent('user_subscription'));
+				modalStore.close();
+			})
+			.catch((error) => {
+				toast.trigger({
+					message: getErrorMessage(error),
+					background: 'variant-filled-error'
+				});
+			})
+			.finally(() => (loading = false));
 	};
 
 	const onSubmit = (event) => {
@@ -84,6 +115,10 @@
 			remaining_sessions: fields.isLimitedSessions ? (Number(fields.remaining_sessions) || 0) : null,
 			sessions_used: Number(fields.sessions_used) || 0
 		};
+
+		if (fields.starts_at) {
+			payload.starts_at = moment(fields.starts_at).startOf('day').toISOString();
+		}
 
 		if (fields.expires_at) {
 			payload.expires_at = moment(fields.expires_at).endOf('day').toISOString();
@@ -111,13 +146,45 @@
 <Modal>
 	<form onsubmit={onSubmit} class="flex flex-1 flex-col" dir={$dir}>
 		<ModalHeader>
-			<div class="flex-1 text-lg font-bold">
-				✏️ {$t('sub_title', 'Member Subscription')} #{subscription?.id}
+			<div class="flex-1 text-lg font-bold flex items-center gap-2">
+				<span>✏️</span>
+				<span>{$t('sub_title', 'Member Subscription')} #{subscription?.id}</span>
 			</div>
 			<ModalClose onClose={() => modalStore.close()} />
 		</ModalHeader>
 
 		<ModalBody>
+			<!-- Instant Renewal Action Banner -->
+			<div class="mb-4 rounded-xl bg-gradient-to-r from-primary-500/15 via-emerald-500/15 to-primary-500/15 border border-primary-500/30 p-3.5 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+				<div>
+					<div class="font-bold text-sm text-primary-800 dark:text-primary-200 flex items-center gap-1.5">
+						<span>🔄</span>
+						<span>{$t('sub_renew', 'Renew Subscription')}</span>
+					</div>
+					<div class="text-xs text-gray-600 dark:text-gray-300">
+						تجديد المدة آلياً وإعادة تعبئة الحصص
+					</div>
+				</div>
+				<div class="flex gap-2">
+					<button
+						type="button"
+						class="btn btn-sm variant-soft-secondary font-semibold"
+						onclick={triggerRenewalCalculation}
+						title="حساب التجديد في النموذج"
+					>
+						⚡ حساب التاريخ الجديد
+					</button>
+					<button
+						type="button"
+						class="btn btn-sm variant-filled-success font-bold text-white shadow"
+						onclick={onDirectRenewApi}
+						disabled={loading}
+					>
+						✓ تجديد فوري وحفظ
+					</button>
+				</div>
+			</div>
+
 			<!-- Package -->
 			<div class="mb-4">
 				<!-- svelte-ignore a11y_label_has_associated_control -->
@@ -230,7 +297,7 @@
 							class="btn btn-xs variant-filled-success text-white"
 							onclick={() => adjustRemainingSessions(1)}
 						>
-							+1 حصة / séance
+							+1 {$t('gate_session')}
 						</button>
 						<button
 							type="button"
@@ -256,9 +323,9 @@
 						<button
 							type="button"
 							class="btn btn-xs variant-soft"
-							onclick={() => { fields.remaining_sessions = fields.total_sessions; }}
+							onclick={() => { fields.remaining_sessions = Math.max(0, fields.total_sessions - fields.sessions_used); }}
 						>
-							إعادة ضبط / Reset
+							{$t('sub_reset')}
 						</button>
 					</div>
 				{:else}
@@ -268,49 +335,71 @@
 				{/if}
 			</div>
 
-			<!-- Dynamic Expiry Extension & Date Picker -->
+			<!-- Dates Section (Start Date & Expiration Date) -->
 			<div class="mb-4 rounded-xl border border-surface-400/20 bg-surface-500/5 p-4">
-				<div class="mb-2 flex items-center justify-between">
-					<span class="text-sm font-bold">
-						📅 {$t('gate_expires_at', 'Expiration Date')}
-					</span>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+					<div>
+						<label class="label">
+							<span class="text-xs font-semibold text-gray-600 dark:text-gray-300">
+								📅 {$t('sub_starts_at', 'Start Date')}
+							</span>
+							<input
+								class="input font-medium"
+								type="date"
+								bind:value={fields.starts_at}
+								disabled={loading}
+							/>
+						</label>
+					</div>
+
+					<div>
+						<label class="label">
+							<span class="text-xs font-semibold text-gray-600 dark:text-gray-300">
+								🏁 {$t('gate_expires_at', 'Expiration Date')}
+							</span>
+							<input
+								class="input font-semibold"
+								type="date"
+								bind:value={fields.expires_at}
+								disabled={loading}
+							/>
+						</label>
+					</div>
 				</div>
 
-				<div class="space-y-3">
-					<input
-						class="input"
-						type="date"
-						bind:value={fields.expires_at}
-						disabled={loading}
-					/>
-
-					<!-- Quick extension buttons -->
-					<div class="flex flex-wrap items-center gap-1.5 pt-1">
-						<span class="text-xs text-gray-500 font-semibold">
-							{$t('sub_quick_add_days', 'Extend validity')}:
-						</span>
-						<button
-							type="button"
-							class="btn btn-xs variant-filled-primary"
-							onclick={() => addDaysToExpiry(7)}
-						>
-							{$t('sub_days_plus_7', '+7 days')}
-						</button>
-						<button
-							type="button"
-							class="btn btn-xs variant-filled-primary"
-							onclick={() => addDaysToExpiry(15)}
-						>
-							{$t('sub_days_plus_15', '+15 days')}
-						</button>
-						<button
-							type="button"
-							class="btn btn-xs variant-filled-primary"
-							onclick={() => addDaysToExpiry(30)}
-						>
-							{$t('sub_days_plus_30', '+30 days')}
-						</button>
-					</div>
+				<!-- Quick extension buttons -->
+				<div class="flex flex-wrap items-center gap-1.5 pt-1">
+					<span class="text-xs text-gray-500 font-semibold">
+						{$t('sub_quick_add_days', 'Extend validity')}:
+					</span>
+					<button
+						type="button"
+						class="btn btn-xs variant-filled-primary"
+						onclick={() => addDaysToExpiry(7)}
+					>
+						{$t('sub_days_plus_7', '+7 days')}
+					</button>
+					<button
+						type="button"
+						class="btn btn-xs variant-filled-primary"
+						onclick={() => addDaysToExpiry(15)}
+					>
+						{$t('sub_days_plus_15', '+15 days')}
+					</button>
+					<button
+						type="button"
+						class="btn btn-xs variant-filled-primary"
+						onclick={() => addDaysToExpiry(30)}
+					>
+						{$t('sub_days_plus_30', '+30 days')}
+					</button>
+					<button
+						type="button"
+						class="btn btn-xs variant-filled-secondary"
+						onclick={triggerRenewalCalculation}
+					>
+						{$t('sub_calculate')}
+					</button>
 				</div>
 			</div>
 		</ModalBody>

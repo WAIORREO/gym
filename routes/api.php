@@ -37,10 +37,13 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::apiResource('services', 'ServiceController');
         Route::apiResource('branches', 'BranchController')->except(['index']);
         Route::apiResource('packages', 'PackageController');
+        Route::post('/subscriptions/{subscription}/transition', 'SubscriptionController@transition');
+        Route::post('/subscriptions/{subscription}/renew', 'SubscriptionController@renew');
         Route::apiResource('subscriptions', 'SubscriptionController');
         Route::apiResource('users', 'UserController');
         Route::apiResource('users.branches', 'UserBranchController')->except(['show', 'update', 'destroy']);
         Route::apiResource('activities', 'ActivityController');
+        Route::get('/stats/overview', 'StatisticsController@overview');
         Route::get('/stats/subscriptions', 'StatisticsController@subscriptions');
         Route::get('/stats/services', 'StatisticsController@services');
         Route::get('/stats/members', 'StatisticsController@members');

@@ -78,7 +78,9 @@ class MeController extends Controller
             ->orderBy('checked_in_at', 'desc');
 
         if ($request->has('month')) {
-            $query->whereRaw("DATE_FORMAT(checked_in_at, '%Y-%m') = ?", [$request->month]);
+            $request->validate(['month'=>'date_format:Y-m']);
+            $start = \Carbon\Carbon::createFromFormat('!Y-m', $request->month)->startOfMonth();
+            $query->where('checked_in_at', '>=', $start)->where('checked_in_at', '<', $start->copy()->addMonth());
         }
 
         $results = $query->paginate(request()->get('per_page', 15))

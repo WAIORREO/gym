@@ -1,5 +1,6 @@
 <script>
 	// @ts-nocheck
+ import { t } from "$lib/i18n.js";
 	import { onMount } from 'svelte';
 	import { getBranches } from '$lib/api/branches.js';
 	import { getMe } from '$lib/api/me.js';
@@ -49,14 +50,14 @@
 </svelte:head>
 
 <div class="px-4 pb-4 pt-6">
-	<h1 class="mb-6 text-2xl font-bold text-white">Gym Branches</h1>
+	<h1 class="mb-6 text-2xl font-bold text-white">{$t('member_branches')}</h1>
 
 	{#if loading}
 		<SkeletonLoader type="card" count={4} class="mb-3" />
 	{:else if branches.length === 0}
 		<div class="card rounded-2xl border border-surface-700 bg-surface-800 p-8 text-center">
-			<p class="font-semibold text-surface-200">No branches found</p>
-			<p class="mt-1 text-sm text-surface-400">Please check back later.</p>
+			<p class="font-semibold text-surface-200">{$t('ui_no_branch')}</p>
+			<p class="mt-1 text-sm text-surface-400">{$t('ui_check_back')}</p>
 		</div>
 	{:else}
 		<div class="flex flex-col gap-3">
@@ -92,7 +93,7 @@
 							<div class="flex items-center gap-2">
 								<h3 class="font-semibold text-white">{branch.name}</h3>
 								{#if mine}
-									<span class="badge variant-filled-primary text-xs">Your Branch</span>
+									<span class="badge variant-filled-primary text-xs">{$t('ui_your_branch')}</span>
 								{/if}
 							</div>
 

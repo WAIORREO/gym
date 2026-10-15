@@ -21,9 +21,10 @@ class GateController extends Controller
         $request->validate([
             'rfid_card_id' => 'required_without:account_number|string',
             'account_number' => 'nullable|string',
-            'branch_id' => 'nullable|integer'
+            'branch_id' => 'nullable|integer|exists:branches,id'
         ]);
 
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
         $rfid = trim((string) ($request->input('rfid_card_id') ?? $request->input('account_number')));
 
         if (empty($rfid)) {
@@ -41,7 +42,7 @@ class GateController extends Controller
         // 1. Find user by RFID card ID, or fallback to account number
         $user = User::where('rfid_card_id', $rfid)
             ->orWhere('account_number', $rfid)
-            ->first();
+            ->lockForUpdate()->first();
 
         if (!$user) {
             return response()->json([
@@ -77,8 +78,17 @@ class GateController extends Controller
             ], 403);
         }
 
-        // 3. Check Active Subscription
-        $subscription = $user->activeSubscription();
+        // Lock the member before checking duplicates and consuming a membership.
+        $branch = $request->filled('branch_id') ? Branch::find($request->branch_id) : Branch::first();
+        if (!$branch || !$user->branches()->where('branches.id', $branch->id)->exists()) {
+            return $this->denied('BRANCH_NOT_ALLOWED', 'branch_not_allowed');
+        }
+        $branchId = $branch->id;
+        $recentCheckIn = Attendance::where('user_id', $user->id)->where('branch_id', $branchId)
+            ->where('checked_in_at', '>=', now()->subMinutes(2))->latest('checked_in_at')->first();
+        $repeated = $recentCheckIn && $recentCheckIn->subscription_id
+            ? \App\Models\Subscription::whereKey($recentCheckIn->subscription_id)->whereIn('status',['active','completed'])->first() : null;
+        $subscription = $repeated ?: $user->activeSubscription();
 
         if (!$subscription) {
             $latest = $user->latestSubscription();
@@ -134,26 +144,13 @@ class GateController extends Controller
             ], 403);
         }
 
-        // Resolve branch
-        $branchId = $request->input('branch_id');
-        $branch = $branchId ? Branch::find($branchId) : Branch::first();
-        if (!$branch) {
-            $branch = Branch::create(['name' => 'الفرع الرئيسي']);
-        }
-        $branchId = $branch->id;
-
-        // 4. Anti-passback check: Did user check in within the last 2 minutes?
-        $recentCheckIn = Attendance::where('user_id', $user->id)
-            ->where('checked_in_at', '>=', now()->subMinutes(2))
-            ->latest('checked_in_at')
-            ->first();
-
         $alreadyCheckedIn = false;
-        if ($recentCheckIn) {
+        if ($repeated) {
             $alreadyCheckedIn = true;
         } else {
             // Record new Attendance
             Attendance::create([
+                'subscription_id' => $subscription->id,
                 'user_id' => $user->id,
                 'branch_id' => $branchId,
                 'checked_in_at' => now(),
@@ -161,9 +158,8 @@ class GateController extends Controller
 
             // Record activity log
             Activity::create([
-                'user_id' => $user->id,
+                'entity_id' => $user->id,
                 'type' => 'attendance',
-                'entity' => 'user',
                 'description' => 'تسجيل دخول عبر بوابة RFID (Gate Entry)'
             ]);
 
@@ -217,7 +213,7 @@ class GateController extends Controller
             'subscription' => [
                 'id' => $subscription->id,
                 'package_name' => $subscription->package ? $subscription->package->name : 'باقة عامة',
-                'cycle_name' => $subscription->cycle ? $subscription->cycle->name : 'شهري',
+                'cycle_name' => $subscription->package?->cycle?->name,
                 'expires_at' => $subscription->expires_at ? Carbon::parse($subscription->expires_at)->format('Y-m-d') : null,
                 'days_left' => $daysLeft,
                 'total_sessions' => $subscription->total_sessions,
@@ -232,6 +228,16 @@ class GateController extends Controller
             ] : null,
             'checked_in_at' => now()->format('Y-m-d H:i:s')
         ]);
+        }, 3);
+    }
+
+    private function denied(string $code, string $key)
+    {
+        return response()->json(['success'=>false,'access_granted'=>false,'status_code'=>$code,
+            'message'=>__('membership.'.$key),
+            'message_ar'=>__('membership.'.$key, [], 'ar'),
+            'message_fr'=>__('membership.'.$key, [], 'fr'),
+            'message_en'=>__('membership.'.$key, [], 'en')], 403);
     }
 
     /**

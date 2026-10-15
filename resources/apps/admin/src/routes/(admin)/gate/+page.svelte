@@ -137,12 +137,7 @@
 
 			// Bilingual error message selection
 			let displayMsg = res?.message || getErrorMessage(error) || $t('gate_access_denied', 'حدث خطأ');
-			if ($currentLang === 'fr') {
-				if (statusCode === 'CARD_NOT_FOUND') displayMsg = $t('gate_card_not_registered');
-				else if (statusCode === 'USER_INACTIVE') displayMsg = $t('gate_account_inactive');
-				else if (statusCode === 'SUBSCRIPTION_EXPIRED') displayMsg = $t('gate_sub_expired');
-				else if (res?.message_en) displayMsg = res.message_en;
-			}
+			displayMsg = res?.['message_' + $currentLang] || displayMsg;
 
 			errorData = {
 				statusCode,
@@ -593,10 +588,8 @@
 
 					<!-- Message -->
 					<div class="mt-6 text-base font-semibold text-emerald-400">
-						{$currentLang === 'fr' 
-							? (memberData.message_fr || memberData.message || $t('gate_verified_success')) 
-							: (memberData.message_ar || memberData.message || $t('gate_verified_success'))}
-					</div>
+						{memberData['message_' + $currentLang] || memberData.message || $t('gate_verified_success')}
+</div>
 
 					<!-- Auto Reset Bar -->
 					<div class="mt-8 flex w-full items-center justify-between text-xs text-slate-500">

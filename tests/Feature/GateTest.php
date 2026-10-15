@@ -40,6 +40,8 @@ class GateTest extends TestCase
             'expires_at' => now()->addDays(30)
         ]);
 
+        if (isset($member)) $member->branches()->sync([Branch::firstOrCreate(['name'=>'Main Gate Branch'])->id]);
+
         $response = $this->postJson('/api/gate/check-in', [
             'rfid_card_id' => 'CARD_RFID_9988',
             'branch_id' => $branch->id
@@ -63,6 +65,8 @@ class GateTest extends TestCase
     public function test_fails_with_invalid_rfid()
     {
         $bearer = $this->getAdminAuth();
+
+        if (isset($member)) $member->branches()->sync([Branch::firstOrCreate(['name'=>'Main Gate Branch'])->id]);
 
         $response = $this->postJson('/api/gate/check-in', [
             'rfid_card_id' => 'NON_EXISTENT_CARD_999'
@@ -101,6 +105,8 @@ class GateTest extends TestCase
             'status' => 'active',
             'expires_at' => now()->subDays(5) // Expired 5 days ago
         ]);
+
+        if (isset($member)) $member->branches()->sync([Branch::firstOrCreate(['name'=>'Main Gate Branch'])->id]);
 
         $response = $this->postJson('/api/gate/check-in', [
             'rfid_card_id' => 'CARD_EXPIRED_1122'
@@ -143,6 +149,8 @@ class GateTest extends TestCase
             'expires_at' => now()->addDays(20)
         ]);
 
+        if (isset($member)) $member->branches()->sync([Branch::firstOrCreate(['name'=>'Main Gate Branch'])->id]);
+
         $response = $this->postJson('/api/gate/check-in', [
             'rfid_card_id' => 'CARD_DEPLETED_7788'
         ], [
@@ -183,6 +191,8 @@ class GateTest extends TestCase
             'status' => 'active',
             'expires_at' => now()->addDays(20)
         ]);
+
+        if (isset($member)) $member->branches()->sync([Branch::firstOrCreate(['name'=>'Main Gate Branch'])->id]);
 
         $response = $this->postJson('/api/gate/check-in', [
             'rfid_card_id' => 'CARD_KARIM_123'

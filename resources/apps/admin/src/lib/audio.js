@@ -1,10 +1,11 @@
 // Web Audio API Sound Synthesizer for Gym Gate / RFID Access
+/** @type {AudioContext | null} */
 let audioCtx = null;
 
 const getAudioContext = () => {
 	if (typeof window === 'undefined') return null;
 	if (!audioCtx) {
-		const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+		const AudioContextClass = window.AudioContext || /** @type {Window & {webkitAudioContext?: typeof AudioContext}} */ (window).webkitAudioContext;
 		if (AudioContextClass) {
 			audioCtx = new AudioContextClass();
 		}

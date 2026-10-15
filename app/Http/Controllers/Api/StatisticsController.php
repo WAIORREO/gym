@@ -58,9 +58,25 @@ class StatisticsController extends Controller
     public function subscriptions()
     {
         $count = Cache::remember(CacheKey::get(), 15, function () {
-            return Subscription::where('status', 'active')->count();
+            return Subscription::eligible()->count();
         });
 
         return response()->json($count);
+    }
+
+    public function overview()
+    {
+        $eligible = Subscription::eligible();
+        return response()->json([
+            'active_members'=> (clone $eligible)->distinct()->count('user_id'),
+            'expiring_soon'=> (clone $eligible)->where('expires_at','<=',now()->addDays(7)->endOfDay())->count(),
+            'low_sessions'=> (clone $eligible)->whereNotNull('total_sessions')->where('remaining_sessions','<=',2)->count(),
+            'today_visits'=> \App\Models\Attendance::where('checked_in_at','>=',now()->startOfDay())->count(),
+            'attention'=> (clone $eligible)->with(['user','package'])->where(function ($q) {
+                $q->where('expires_at','<=',now()->addDays(7)->endOfDay())
+                  ->orWhere(fn ($q)=>$q->whereNotNull('total_sessions')->where('remaining_sessions','<=',2));
+            })->orderBy('expires_at')->limit(8)->get(),
+            'recent'=> \App\Models\Attendance::with(['user','branch'])->latest('checked_in_at')->limit(6)->get(),
+        ]);
     }
 }

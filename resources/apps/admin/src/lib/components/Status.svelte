@@ -1,6 +1,7 @@
 <script>
-	// @ts-nocheck
-	let { status } = $props();
+ // @ts-nocheck
+ import { t } from "$lib/i18n.js";
+		let { status } = $props();
 
 	let badgeStyle = $derived.by(() => {
 		return (
@@ -15,5 +16,5 @@
 </script>
 
 <span class={`badge ${badgeStyle}`}>
-	{status}
+	{$t('sub_status_' + status, status)}
 </span>

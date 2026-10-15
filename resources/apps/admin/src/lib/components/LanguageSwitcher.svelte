@@ -1,22 +1,9 @@
 <script>
-	// @ts-nocheck
-	import { currentLang, toggleLanguage } from '$lib/i18n.js';
-
-	export let size = 'sm'; // 'sm' | 'md'
-	export let variant = 'outline'; // 'outline' | 'filled'
+ import { currentLang, setLanguage } from '$lib/i18n.js';
 </script>
-
-<button
-	type="button"
-	class="inline-flex items-center gap-2 rounded-full border border-blue-400/40 bg-blue-950/60 px-3 py-1.5 text-xs font-semibold text-white shadow-sm backdrop-blur transition-all hover:border-blue-400 hover:bg-blue-900/80 active:scale-95"
-	onclick={() => toggleLanguage()}
-	title={$currentLang === 'ar' ? 'Changer en Français' : 'التحويل إلى العربية'}
->
-	{#if $currentLang === 'ar'}
-		<span class="text-sm">🇫🇷</span>
-		<span class="tracking-wide">Français</span>
-	{:else}
-		<span class="text-sm">🇩🇿</span>
-		<span class="tracking-wide">العربية</span>
-	{/if}
-</button>
+<label class="inline-flex items-center gap-2 text-sm">
+ <span class="sr-only">Language / اللغة / Langue</span>
+ <select class="rounded-lg border border-slate-500 bg-slate-900 px-3 py-2 text-white" value={$currentLang} onchange={(event) => setLanguage(event.currentTarget.value)} aria-label="Language / اللغة / Langue">
+  <option value="ar">العربية</option><option value="fr">Français</option><option value="en">English</option>
+ </select>
+</label>

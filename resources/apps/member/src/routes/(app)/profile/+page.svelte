@@ -1,5 +1,6 @@
 <script>
 	// @ts-nocheck
+ import { t } from "$lib/i18n.js";
 	import { onMount } from 'svelte';
 	import { getMe, updateMe, updatePassword, uploadAvatar } from '$lib/api/me.js';
 	import { authStore } from '$lib/stores/auth.js';
@@ -29,7 +30,7 @@
 		password_confirmation: ''
 	});
 
-	let fileInput;
+	let fileInput = $state();
 
 	const getInitials = (name) => {
 		if (!name) return '?';
@@ -159,7 +160,7 @@
 </svelte:head>
 
 <div class="px-4 pb-4 pt-6">
-	<h1 class="mb-6 text-2xl font-bold text-white">Profile</h1>
+	<h1 class="mb-6 text-2xl font-bold text-white">{$t('member_profile')}</h1>
 
 	<!-- Avatar + basic info -->
 	{#if loading}
@@ -234,7 +235,7 @@
 			<form onsubmit={onSaveProfile} class="card rounded-2xl bg-surface-800 p-4">
 				<div class="flex flex-col gap-4">
 					<label class="label">
-						<span class="text-sm text-surface-200">Contact Number</span>
+						<span class="text-sm text-surface-200">{$t('ui_contact')}</span>
 						<input
 							class="input mt-1 rounded-lg"
 							type="tel"
@@ -245,7 +246,7 @@
 					</label>
 
 					<label class="label">
-						<span class="text-sm text-surface-200">Address</span>
+						<span class="text-sm text-surface-200">{$t('ui_address')}</span>
 						<input
 							class="input mt-1 rounded-lg"
 							type="text"
@@ -257,23 +258,23 @@
 
 					<div class="grid grid-cols-2 gap-3">
 						<label class="label">
-							<span class="text-sm text-surface-200">City</span>
+							<span class="text-sm text-surface-200">{$t('ui_city')}</span>
 							<input
 								class="input mt-1 rounded-lg"
 								type="text"
 								bind:value={profileFields.city}
-								placeholder="City"
+								placeholder={$t('ui_city')}
 								disabled={saving}
 							/>
 						</label>
 
 						<label class="label">
-							<span class="text-sm text-surface-200">State</span>
+							<span class="text-sm text-surface-200">{$t('ui_state')}</span>
 							<input
 								class="input mt-1 rounded-lg"
 								type="text"
 								bind:value={profileFields.state}
-								placeholder="State"
+								placeholder={$t('ui_state')}
 								disabled={saving}
 							/>
 						</label>
@@ -281,18 +282,18 @@
 
 					<div class="grid grid-cols-2 gap-3">
 						<label class="label">
-							<span class="text-sm text-surface-200">Country</span>
+							<span class="text-sm text-surface-200">{$t('ui_country')}</span>
 							<input
 								class="input mt-1 rounded-lg"
 								type="text"
 								bind:value={profileFields.country}
-								placeholder="Country"
+								placeholder={$t('ui_country')}
 								disabled={saving}
 							/>
 						</label>
 
 						<label class="label">
-							<span class="text-sm text-surface-200">Postcode</span>
+							<span class="text-sm text-surface-200">{$t('ui_postcode')}</span>
 							<input
 								class="input mt-1 rounded-lg"
 								type="text"
@@ -326,13 +327,13 @@
 	<!-- Change password -->
 	<section class="mb-6">
 		<h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-surface-400">
-			Change Password
+			{$t('ui_change_password')}
 		</h2>
 
 		<form onsubmit={onSavePassword} class="card rounded-2xl bg-surface-800 p-4">
 			<div class="flex flex-col gap-4">
 				<label class="label">
-					<span class="text-sm text-surface-200">Current Password</span>
+					<span class="text-sm text-surface-200">{$t('ui_current_password')}</span>
 					<input
 						class="input mt-1 rounded-lg"
 						type="password"
@@ -345,7 +346,7 @@
 				</label>
 
 				<label class="label">
-					<span class="text-sm text-surface-200">New Password</span>
+					<span class="text-sm text-surface-200">{$t('ui_new_password')}</span>
 					<input
 						class="input mt-1 rounded-lg"
 						type="password"
@@ -359,7 +360,7 @@
 				</label>
 
 				<label class="label">
-					<span class="text-sm text-surface-200">Confirm New Password</span>
+					<span class="text-sm text-surface-200">{$t('ui_confirm_password')}</span>
 					<input
 						class="input mt-1 rounded-lg"
 						type="password"
@@ -398,7 +399,7 @@
 			onclick={onLogout}
 			class="btn variant-filled-error w-full rounded-lg font-semibold"
 		>
-			Sign Out
+			{$t('ui_logout')}
 		</button>
 	</section>
 </div>

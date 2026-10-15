@@ -1,5 +1,6 @@
 <script>
 	// @ts-nocheck
+ import { t } from "$lib/i18n.js";
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -79,12 +80,12 @@
 </svelte:head>
 
 <div class="px-4 pb-4 pt-6">
-	<h1 class="mb-4 text-2xl font-bold text-white">Attendance</h1>
+	<h1 class="mb-4 text-2xl font-bold text-white">{$t('member_attendance')}</h1>
 
 	<!-- Month filter -->
 	<div class="mb-4">
 		<label class="label">
-			<span class="text-sm text-surface-300">Filter by month</span>
+			<span class="text-sm text-surface-300">{$t('ui_month')}</span>
 			<input
 				type="month"
 				class="input mt-1 rounded-lg bg-surface-800 text-white"
@@ -104,9 +105,9 @@
 					<path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
 				</svg>
 			</div>
-			<p class="font-semibold text-surface-200">No attendance records</p>
+			<p class="font-semibold text-surface-200">{$t('ui_no_attendance')}</p>
 			<p class="mt-1 text-sm text-surface-400">
-				{selectedMonth ? 'No visits recorded for this month.' : 'No gym visits recorded yet.'}
+				{$t('ops_empty')}
 			</p>
 		</div>
 	{:else}
@@ -120,10 +121,10 @@
 					<!-- Date badge -->
 					<div class="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-primary-500/20">
 						<span class="text-lg font-bold leading-none text-primary-400">
-							{moment(item.created_at ?? item.date).format('D')}
+							{moment(item.checked_in_at ?? item.created_at ?? item.date).format('D')}
 						</span>
 						<span class="text-xs text-primary-300">
-							{moment(item.created_at ?? item.date).format('MMM')}
+							{moment(item.checked_in_at ?? item.created_at ?? item.date).format('MMM')}
 						</span>
 					</div>
 
@@ -132,7 +133,7 @@
 							{item.branch?.name ?? item.branch_name ?? 'Gym Visit'}
 						</p>
 						<p class="text-xs text-surface-400">
-							{moment(item.created_at ?? item.date).format('dddd, MMMM D, YYYY')}
+							{moment(item.checked_in_at ?? item.created_at ?? item.date).format('dddd, MMMM D, YYYY')}
 						</p>
 						{#if item.description}
 							<p class="mt-0.5 truncate text-xs text-surface-400">{item.description}</p>
@@ -141,7 +142,7 @@
 
 					<div class="shrink-0 text-right">
 						<span class="text-xs text-surface-400">
-							{moment(item.created_at ?? item.date).format('h:mm A')}
+							{moment(item.checked_in_at ?? item.created_at ?? item.date).format('h:mm A')}
 						</span>
 					</div>
 				</div>
@@ -156,17 +157,17 @@
 					disabled={currentPage <= 1}
 					class="btn variant-soft rounded-lg disabled:opacity-40"
 				>
-					&larr; Previous
+					{$t('member_previous')}
 				</button>
 				<span class="text-sm text-surface-300">
-					Page {currentPage} of {lastPage}
+					{currentPage} / {lastPage}
 				</span>
 				<button
 					onclick={nextPage}
 					disabled={currentPage >= lastPage}
 					class="btn variant-soft rounded-lg disabled:opacity-40"
 				>
-					Next &rarr;
+					{$t('member_next')}
 				</button>
 			</div>
 		{/if}

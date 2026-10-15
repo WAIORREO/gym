@@ -26,6 +26,7 @@ export const apiFetch = async (path, options = {}) => {
 	const headers = {
 		'Content-Type': 'application/json',
 		Accept: 'application/json',
+        'Accept-Language': typeof localStorage !== 'undefined' ? (localStorage.getItem('laragym_lang') || 'ar') : 'ar',
 		...(token ? { Authorization: `Bearer ${token}` } : {}),
 		...(options.headers ?? {})
 	};
@@ -93,6 +94,7 @@ export const apiUpload = (path, formData) => {
 		method: 'POST',
 		headers: {
 			Accept: 'application/json',
+        'Accept-Language': typeof localStorage !== 'undefined' ? (localStorage.getItem('laragym_lang') || 'ar') : 'ar',
 			...(token ? { Authorization: `Bearer ${token}` } : {})
 		},
 		body: formData

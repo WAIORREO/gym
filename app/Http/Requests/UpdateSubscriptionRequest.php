@@ -24,13 +24,15 @@ class UpdateSubscriptionRequest extends FormRequest
     public function rules()
     {
         return [
-            'status' => 'nullable|in:active,inactive,expired,suspended,cancelled,completed',
-            'total_sessions' => 'nullable|integer|min:0',
-            'remaining_sessions' => 'nullable|integer|min:0',
-            'sessions_used' => 'nullable|integer|min:0',
-            'expires_at' => 'nullable|date',
-            'interval' => 'nullable|numeric|min:1',
-            'package_id' => 'nullable|exists:packages,id'
+            'status' => 'sometimes|required|in:active,inactive,expired,suspended,cancelled,completed',
+            'total_sessions' => 'nullable|integer|min:0|max:100000',
+            'remaining_sessions' => 'nullable|integer|min:0|max:100000',
+            'sessions_used' => 'nullable|integer|min:0|max:100000',
+            'starts_at' => 'nullable|date',
+            'expires_at' => 'sometimes|required|date',
+            'interval' => 'sometimes|required|integer|min:1|max:120',
+            'user_id' => 'sometimes|required|integer|exists:users,id',
+            'package_id' => 'sometimes|required|integer|exists:packages,id'
         ];
     }
 }

@@ -15,7 +15,7 @@
 		Authorization: getBearerToken()
 	});
 
-	const title = 'Manage Subscriptions';
+	const title = $derived($t('nav_subscriptions'));
 
 	let items = $state([]);
 	let loading = $state(false);
@@ -28,7 +28,7 @@
 	});
 
 	const onDelete = (id) => {
-		const confirm = window.confirm('are you sure you wanna delete this item?');
+		const confirm = window.confirm($t('ui_delete_confirm'));
 		if (confirm) {
 			items = items.filter((v) => v.id != id);
 			paginationSettings.size = paginationSettings.size - 1;
@@ -82,7 +82,7 @@
 			<table class="table-hover table bg-white">
 				<thead>
 					<tr>
-						<th>ID</th>
+						<th>{$t('ui_id')}</th>
 						<th>{$t('gate_member_name', 'Name')}</th>
 						<th>{$t('sub_sessions_badge', 'Sessions')}</th>
 						<th>{$t('gate_expires_at', 'Expires At')}</th>
@@ -132,7 +132,7 @@
 								<button
 									type="button"
 									class="btn-icon btn-icon-sm variant-filled-primary mr-1"
-									onclick={() => onEdit(item.id)}
+									aria-label={$t("common_edit")} onclick={() => onEdit(item.id)}
 									title={$t('common_edit', 'Edit')}
 								>
 									<span class="h-3.5 w-3.5 text-white">
@@ -142,7 +142,7 @@
 								<button
 									type="button"
 									class="btn-icon btn-icon-sm variant-filled-error"
-									onclick={() => onDelete(item.id)}
+									aria-label={$t("common_delete")} onclick={() => onDelete(item.id)}
 									title={$t('common_delete', 'Delete')}
 								>
 									<span class="h-3.5 w-3.5 text-white">
@@ -155,7 +155,7 @@
 				</tbody>
 				<tfoot>
 					<tr>
-						<th colspan="3" class="bg-white">Results Found {paginationSettings.size}</th
+						<th colspan="3" class="bg-white">{$t('ui_results')} {paginationSettings.size}</th
 						>
 						<td class="bg-white"></td>
 					</tr>

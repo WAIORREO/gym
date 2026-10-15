@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { gymCopy } from './gym-copy.js';
 import { writable, derived } from 'svelte/store';
 
 // Default language: Arabic ('ar') or French ('fr')
@@ -139,6 +140,11 @@ export const translations = {
         sub_status_completed: 'مكتمل (استنفد الحصص)',
         sub_status_expired: 'منتهي الصلاحية',
         sub_valid_until: 'صالح لغاية',
+        sub_starts_at: 'تاريخ البداية (اليوم تلقائياً)',
+        sub_renew: 'تجديد الاشتراك',
+        sub_renew_confirm: 'هل أنت متأكد من تجديد هذا الاشتراك وتمديد تاريخ الانتهاء وإعادة تعبئة الحصص؟',
+        sub_renew_success: 'تم تجديد الاشتراك بنجاح',
+        sub_auto_calculated: 'محسوب تلقائياً من تاريخ البداية ومدة الباقة',
         sub_sessions_badge: 'الحصص',
         sub_sessions_progress: 'مستهلكة من',
 
@@ -288,6 +294,11 @@ export const translations = {
         sub_status_completed: 'Complété (séances épuisées)',
         sub_status_expired: 'Expiré',
         sub_valid_until: 'Valable jusqu\'au',
+        sub_starts_at: 'Date de début (Aujourd\'hui par défaut)',
+        sub_renew: 'Renouveler l\'abonnement',
+        sub_renew_confirm: 'Confirmer le renouvellement de cet abonnement et la réinitialisation des séances ?',
+        sub_renew_success: 'Abonnement renouvelé avec succès',
+        sub_auto_calculated: 'Calculé automatiquement à partir de la date de début et du cycle',
         sub_sessions_badge: 'Séances',
         sub_sessions_progress: 'consommées sur',
 
@@ -312,12 +323,15 @@ export const translations = {
     }
 };
 
+translations.en = {"app_name": "LaraGym", "app_tagline": "Gym memberships and access management", "lang_switch": "Language", "lang_name": "English", "lang_flag": "EN", "nav_dashboard": "Overview", "nav_activities": "Activity log", "nav_attendance": "Attendance", "nav_gate": "Access gate", "nav_members": "Members", "nav_branches": "Branches", "nav_subscriptions": "Memberships", "nav_packages": "Plans and packages", "nav_services": "Gym services", "nav_cycles": "Membership periods", "nav_users": "Staff and administrators", "nav_settings": "Settings", "nav_logout": "Sign out", "login_title": "Sign in", "login_subtitle": "Enter your credentials to continue", "login_email": "Email address", "login_password": "Password", "login_btn": "Sign in", "login_btn_loading": "Signing in…", "login_forgot": "Forgot password?", "login_success": "Signed in successfully", "login_failed": "Sign-in failed. Check your credentials.", "login_no_admin": "This account does not have staff access", "common_all": "All", "common_search": "Search…", "common_save": "Save", "common_cancel": "Cancel", "common_delete": "Delete", "common_edit": "Edit", "common_add": "Add", "common_actions": "Actions", "common_loading": "Loading…", "common_success": "Saved successfully", "common_error": "Something went wrong", "common_name": "Name", "common_email": "Email", "common_phone": "Phone", "common_date": "Date", "common_time": "Time", "common_total": "Total", "gate_title": "Access control", "gate_subtitle": "Check membership eligibility and record arrivals", "gate_kiosk_badge": "Reception mode", "gate_waiting_title": "Ready to check in", "gate_waiting_subtitle": "Scan your membership card at the reader", "gate_scanning": "Checking card and membership…", "gate_access_granted": "Access granted", "gate_access_denied": "Access denied", "gate_verified_success": "Welcome. Enjoy your workout!", "gate_already_checked_in": "This arrival has already been recorded", "gate_card_not_registered": "Card not registered. Please contact reception.", "gate_account_inactive": "Account inactive. Please contact reception.", "gate_sub_expired": "Membership expired. Please renew.", "gate_sub_none": "No active membership", "gate_member_name": "Member name", "gate_account_num": "Member number", "gate_rfid_card": "RFID card", "gate_status": "Account status", "gate_package": "Membership plan", "gate_cycle": "Period", "gate_expires_at": "Expiry date", "gate_days_left": "Days remaining", "gate_sessions_left": "Sessions remaining", "gate_total_sessions": "Total sessions", "gate_unlimited_sessions": "Unlimited sessions", "gate_sessions_depleted": "All sessions have been used. Please renew.", "gate_duration_expired": "Membership validity has ended", "gate_sessions": "sessions", "gate_session": "session", "gate_used": "used", "gate_branch": "Branch", "gate_checkin_time": "Arrival time", "gate_day": "day", "gate_days": "days", "gate_active": "Active", "gate_inactive": "Inactive", "gate_expired": "Expired", "gate_sound_on": "Sound on", "gate_sound_muted": "Sound muted", "gate_fullscreen": "Full screen", "gate_exit_fullscreen": "Exit full screen", "gate_reset": "Reset screen", "gate_auto_reset": "Resetting in", "gate_seconds": "seconds", "gate_manual_placeholder": "Enter a card or member number…", "gate_check_btn": "Check access", "gate_test_title": "Sample cards", "gate_test_active": "Active card", "gate_test_second": "Unlimited membership", "gate_test_depleted": "Sessions depleted", "gate_test_expired": "Expired membership", "gate_test_unregistered": "Unregistered card", "gate_today_stats": "Today at the gym", "gate_today_checkins": "Today’s visits", "gate_current_hall": "Current branch", "gate_select_branch": "Select a branch", "gate_recent_feed": "Recent arrivals today", "gate_no_checkins_yet": "No arrivals today", "sub_title": "Membership", "sub_package": "Plan", "sub_interval": "Number of periods", "sub_sessions_type": "Session allowance", "sub_sessions_limited": "Limited sessions", "sub_sessions_unlimited": "Unlimited sessions", "sub_total_sessions": "Total sessions", "sub_remaining_sessions": "Sessions remaining", "sub_sessions_used": "Sessions used", "sub_add_sessions": "Adjust session credit", "sub_custom_expiry": "Custom expiry", "sub_use_custom_expiry": "Set a custom expiry", "sub_calculated_expiry": "Calculated expiry", "sub_quick_add_days": "Extend validity", "sub_days_plus_7": "+7 days", "sub_days_plus_15": "+15 days", "sub_days_plus_30": "+30 days", "sub_status": "Membership status", "sub_valid_until": "Valid until", "sub_starts_at": "Start date", "sub_renew": "Renew membership", "sub_renew_success": "Membership renewed", "sub_auto_calculated": "Calculated from start date and plan duration", "sub_sessions_badge": "Sessions", "sub_sessions_progress": "used of"};
+for (const lang of ["ar", "fr", "en"]) Object.assign(translations[lang], gymCopy[lang]);
+
 // Reactive translation store
 export const t = derived(currentLang, ($lang) => {
     return (key, fallback = '') => {
         const langDict = translations[$lang] || translations.ar;
         if (key in langDict) return langDict[key];
-        const arDict = translations.ar;
+        const arDict = $lang === 'en' ? translations.en : translations.ar;
         if (key in arDict) return arDict[key];
         return fallback || key;
     };
@@ -325,7 +339,7 @@ export const t = derived(currentLang, ($lang) => {
 
 // Set language helper
 export function setLanguage(lang) {
-    if (lang !== 'ar' && lang !== 'fr') return;
+    if (!['ar', 'fr', 'en'].includes(lang)) return;
     currentLang.set(lang);
     if (typeof window !== 'undefined') {
         localStorage.setItem('laragym_lang', lang);

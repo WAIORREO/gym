@@ -18,17 +18,24 @@
 
 	let loading = $state(false);
 
+	const formatDateForInput = (d) => moment(d).format('YYYY-MM-DD');
+
 	let fields = $state({
 		package: null,
 		user: null,
 		interval: 1,
 		isLimitedSessions: true,
 		total_sessions: 12,
+		starts_at: formatDateForInput(moment()), // Today by default!
 		customExpiry: false,
 		expires_at: ''
 	});
 
-	const formatDateForInput = (d) => moment(d).format('YYYY-MM-DD');
+	const recalculateEndDate = () => {
+		const base = fields.starts_at ? moment(fields.starts_at) : moment();
+		const days = (fields.package?.cycle?.num_days || 30) * (Number(fields.interval) || 1);
+		fields.expires_at = formatDateForInput(base.add(days, 'days'));
+	};
 
 	const addDaysToExpiry = (days) => {
 		fields.customExpiry = true;
@@ -47,12 +54,26 @@
 				fields.isLimitedSessions = true;
 				fields.total_sessions = fields.package.sessions * (fields.interval || 1);
 			}
-			if (fields.package.cycle && fields.package.cycle.num_days && !fields.customExpiry) {
-				const days = fields.package.cycle.num_days * (fields.interval || 1);
-				fields.expires_at = formatDateForInput(moment().add(days, 'days'));
+			if (!fields.customExpiry) {
+				recalculateEndDate();
 			}
 		}
 	});
+
+	const onStartDateChange = () => {
+		if (!fields.customExpiry) {
+			recalculateEndDate();
+		}
+	};
+
+	const onIntervalChange = () => {
+		if (!fields.customExpiry) {
+			recalculateEndDate();
+		}
+		if (fields.package?.sessions && fields.isLimitedSessions) {
+			fields.total_sessions = fields.package.sessions * (Number(fields.interval) || 1);
+		}
+	};
 
 	const onSubmit = () => {
 		if (!fields.package || !fields.package.id) {
@@ -77,11 +98,12 @@
 			package_id: fields.package.id,
 			user_id: fields.user.id,
 			interval: Number(fields.interval) || 1,
+			starts_at: moment(fields.starts_at || moment()).startOf('day').toISOString(),
 			total_sessions: fields.isLimitedSessions ? (Number(fields.total_sessions) || 0) : null,
 			remaining_sessions: fields.isLimitedSessions ? (Number(fields.total_sessions) || 0) : null
 		};
 
-		if (fields.customExpiry && fields.expires_at) {
+		if (fields.expires_at) {
 			payload.expires_at = moment(fields.expires_at).endOf('day').toISOString();
 		}
 
@@ -135,20 +157,38 @@
 				</label>
 			</div>
 
-			<!-- Interval -->
-			<div class="mb-4">
-				<label class="label">
-					<span class="font-semibold">{$t('sub_interval', 'Interval')}</span>
-					<input
-						class="input"
-						bind:value={fields.interval}
-						name="interval"
-						type="number"
-						min="1"
-						required
-						disabled={loading}
-					/>
-				</label>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+				<!-- Interval -->
+				<div>
+					<label class="label">
+						<span class="font-semibold">{$t('sub_interval', 'Interval')}</span>
+						<input
+							class="input"
+							bind:value={fields.interval}
+							oninput={onIntervalChange}
+							name="interval"
+							type="number"
+							min="1"
+							required
+							disabled={loading}
+						/>
+					</label>
+				</div>
+
+				<!-- Start Date (Starts Today Automatically) -->
+				<div>
+					<label class="label">
+						<span class="font-semibold">📅 {$t('sub_starts_at', 'Start Date')} *</span>
+						<input
+							class="input font-semibold"
+							type="date"
+							bind:value={fields.starts_at}
+							onchange={onStartDateChange}
+							required
+							disabled={loading}
+						/>
+					</label>
+				</div>
 			</div>
 
 			<!-- Dynamic Session Settings Section -->
@@ -212,36 +252,32 @@
 				{/if}
 			</div>
 
-			<!-- Dynamic Expiration Settings Section -->
+			<!-- Dynamic Expiration Settings Section (Auto-generated from starts_at + cycle) -->
 			<div class="mb-4 rounded-xl border border-surface-400/20 bg-surface-500/5 p-4">
 				<div class="mb-3 flex items-center justify-between">
 					<span class="text-sm font-bold">
-						📅 {$t('sub_custom_expiry', 'Custom Expiration')}
+						📅 {$t('gate_expires_at', 'Expiration Date')}
 					</span>
 					<label class="flex items-center gap-2 cursor-pointer text-xs">
 						<input
 							type="checkbox"
 							class="checkbox checkbox-sm"
 							bind:checked={fields.customExpiry}
+							onchange={() => { if (!fields.customExpiry) recalculateEndDate(); }}
 						/>
 						<span>{$t('sub_use_custom_expiry', 'Custom')}</span>
 					</label>
 				</div>
 
-				{#if fields.customExpiry}
-					<div class="space-y-3">
-						<label class="label">
-							<span class="text-xs text-gray-500 dark:text-gray-400">
-								{$t('gate_expires_at', 'Expiration Date')}
-							</span>
-							<input
-								class="input"
-								type="date"
-								bind:value={fields.expires_at}
-								disabled={loading}
-							/>
-						</label>
+				<div class="space-y-3">
+					<input
+						class="input font-semibold {fields.customExpiry ? 'border-primary-500' : ''}"
+						type="date"
+						bind:value={fields.expires_at}
+						disabled={loading}
+					/>
 
+					{#if fields.customExpiry}
 						<div class="flex flex-wrap items-center gap-1.5 pt-1">
 							<span class="text-xs text-gray-500">تمديد / Prolonger:</span>
 							<button
@@ -265,16 +301,21 @@
 							>
 								+30 j
 							</button>
+							<button
+								type="button"
+								class="btn btn-xs variant-soft"
+								onclick={recalculateEndDate}
+							>
+								🔄 حساب تلقائي / Auto
+							</button>
 						</div>
-					</div>
-				{:else}
-					<div class="text-xs text-gray-500 dark:text-gray-400">
-						ℹ️ {$t('sub_calculated_expiry', 'Calculated automatically from cycle duration')}
-						{#if fields.expires_at}
-							: <strong class="text-primary-600 dark:text-primary-400">{fields.expires_at}</strong>
-						{/if}
-					</div>
-				{/if}
+					{:else}
+						<div class="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+							<span>✓</span>
+							<span>{$t('sub_auto_calculated', 'Calculated automatically from start date and duration')}</span>
+						</div>
+					{/if}
+				</div>
 			</div>
 
 			<div class="flex items-center justify-between border-t pt-4">

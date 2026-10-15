@@ -1,7 +1,8 @@
 import { browser } from '$app/environment';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import axios from 'axios';
 
+/** @param {any} error */
 export const getErrorMessage = (error) => {
 	let message = error?.message || 'Unknown error';
 
@@ -28,6 +29,7 @@ export const getBearerToken = () => {
 	return undefined;
 };
 
+/** @param {unknown} raw */
 export const normalizeApiBaseUrl = (raw) => {
 	let str = typeof raw === 'string' ? raw.trim() : '';
 
@@ -55,19 +57,18 @@ export const normalizeApiBaseUrl = (raw) => {
 };
 
 export const useApi = (headers = {}) => {
-	let base = '';
-
-	if (typeof process !== 'undefined' && process.env && process.env.PUBLIC_API_URL) {
-		base = process.env.PUBLIC_API_URL;
-	} else if (PUBLIC_API_URL) {
-		base = PUBLIC_API_URL;
-	}
+	const base = env.PUBLIC_API_URL || '';
 
 	const baseURL = normalizeApiBaseUrl(base);
 
-	return axios.create({
+	const client = axios.create({
 		headers,
 		baseURL,
 		timeout: 30000 // 30s timeout in case free tier service is waking up
 	});
+ client.interceptors.request.use(config => {
+  if (typeof window !== 'undefined') config.headers['Accept-Language'] = localStorage.getItem('laragym_lang') || 'ar';
+  return config;
+ });
+ return client;
 };

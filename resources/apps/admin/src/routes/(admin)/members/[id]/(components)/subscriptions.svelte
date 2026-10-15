@@ -95,13 +95,46 @@
 		}
 	};
 
+	const onConfirmRenew = async (item) => {
+		try {
+			loading = true;
+			await api.post(`/subscriptions/${item.id}/renew`, {});
+			toast.trigger({
+				message: $t('sub_renew_success', 'Subscription renewed successfully'),
+				background: 'variant-filled-success'
+			});
+			loadItems();
+		} catch (error) {
+			toast.trigger({
+				message: getErrorMessage(error),
+				background: 'variant-filled-error'
+			});
+		} finally {
+			loading = false;
+		}
+	};
+
+	const onRenew = (item) => {
+		const modal = {
+			type: 'confirm',
+			title: $t('sub_renew', 'Renew Subscription'),
+			body: $t('sub_renew_confirm', 'Are you sure you wish to renew this subscription and extend its dates?'),
+			response: (r) => {
+				if (r) onConfirmRenew(item);
+			}
+		};
+		modalStore.trigger(modal);
+	};
+
 	const onDelete = (item) => {
 		const modal = {
 			type: 'confirm',
 			// Data
 			title: 'Please Confirm',
 			body: 'Are you sure you wish to proceed?',
-			response: (r) => onConfirmDelete(item)
+			response: (r) => {
+				if (r) onConfirmDelete(item);
+			}
 		};
 		modalStore.trigger(modal);
 	};
@@ -120,7 +153,7 @@
 
 	<SubscriptionList>
 		{#each subscriptions as item}
-			<SubscriptionCard {item} {onDelete} {onEdit} />
+			<SubscriptionCard {item} {onDelete} {onEdit} {onRenew} />
 		{/each}
 	</SubscriptionList>
 </div>

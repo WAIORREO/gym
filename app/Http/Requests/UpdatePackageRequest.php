@@ -24,9 +24,10 @@ class UpdatePackageRequest extends FormRequest
     public function rules()
     {
         return [
+            'sessions' => 'nullable|integer|min:1|max:100000',
             'services.*' => 'required|integer|exists:services,id',
             'cycle_id' => 'integer|exists:cycles,id',
-            'amount' => 'numeric',
+            'amount' => 'numeric|min:0',
             'name' => 'string|max:255',
             'status' => 'string|in:active,inactive,deleted'
         ];

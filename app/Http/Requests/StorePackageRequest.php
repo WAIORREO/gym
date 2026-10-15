@@ -24,9 +24,10 @@ class StorePackageRequest extends FormRequest
     public function rules()
     {
         return [
+            'sessions' => 'nullable|integer|min:1|max:100000',
             'services.*' => 'required|integer|exists:services,id',
             'cycle_id' => 'required|integer|exists:cycles,id',
-            'amount' => 'required|numeric',
+            'amount' => 'required|numeric|min:0',
             'name' => 'required|string|max:255',
             'status' => 'required|string|in:active,inactive,deleted'
         ];

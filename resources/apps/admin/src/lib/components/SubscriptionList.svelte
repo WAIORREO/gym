@@ -8,6 +8,6 @@
 
 <style lang="postcss">
 	.subscriptions {
-		@apply grid grid-cols-4 gap-4;
+		@apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4;
 	}
 </style>

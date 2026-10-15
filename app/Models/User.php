@@ -108,25 +108,14 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function activeSubscription()
     {
-        return $this->subscriptions()
-            ->with(['package', 'cycle'])
-            ->where('status', \App\Models\Constants\StatusType::ACTIVE)
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                      ->orWhere('expires_at', '>=', now()->startOfDay());
-            })
-            ->where(function ($query) {
-                $query->whereNull('remaining_sessions')
-                      ->orWhere('remaining_sessions', '>', 0);
-            })
-            ->latest('id')
-            ->first();
+        return $this->subscriptions()->with(['package.cycle'])->eligible()
+            ->orderBy('expires_at')->orderBy('id')->lockForUpdate()->first();
     }
 
     public function latestSubscription()
     {
         return $this->subscriptions()
-            ->with(['package', 'cycle'])
+            ->with(['package.cycle'])
             ->latest('id')
             ->first();
     }

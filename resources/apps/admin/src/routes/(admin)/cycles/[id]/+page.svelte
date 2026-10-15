@@ -134,8 +134,7 @@
 						bind:value={fields.description}
 						name="description"
 						required
-						disabled={loading}
-					/>
+						disabled={loading}></textarea>
 				</label>
 			</div>
 

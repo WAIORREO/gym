@@ -12,6 +12,7 @@ class Attendance extends Model
     use HasFactory, HasUser, SoftDeletes;
 
     protected $fillable = [
+        'subscription_id',
         'user_id',
         'branch_id',
         'checked_in_at',
