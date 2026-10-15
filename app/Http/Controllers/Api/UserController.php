@@ -48,9 +48,16 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
-        $this->userAuthService->register($request->email, $request->password, $request->name);
+        $user = User::create([
+            'email' => $request->email,
+            'name' => $request->name,
+            'password' => bcrypt($request->password),
+            'status' => $request->input('status', 'active'),
+            'rfid_card_id' => $request->rfid_card_id,
+            'account_number' => $request->account_number,
+        ]);
 
-        return response()->json(['success' => true], 201);
+        return response()->json($user, 201);
     }
 
     /**
