@@ -9,6 +9,7 @@
 	import moment from 'moment';
 	import EditIcon from 'svelte-icons/fa/FaEdit.svelte';
 	import DeleteIcon from 'svelte-icons/fa/FaTrash.svelte';
+	import { t, dir } from '$lib/i18n.js';
 
 	const api = useApi({
 		Authorization: getBearerToken()
@@ -60,17 +61,19 @@
 	<title>{title}</title>
 </svelte:head>
 
-<div class="p-4 lg:p-6">
-	<div class="card bg-white p-4 lg:p-6">
-		<header class="card-header mb-6 flex items-center">
-			<h3 class="h3">{title}</h3>
-			<div class="flex-1"></div>
+<div class="p-4 lg:p-6" dir={$dir}>
+	<div class="card bg-white p-4 lg:p-6 shadow-sm">
+		<header class="card-header mb-6 flex items-center justify-between">
+			<h3 class="h3 font-bold flex items-center gap-2">
+				<span>🎟️</span>
+				<span>{$t('nav_subscriptions', 'Manage Subscriptions')}</span>
+			</h3>
 			<button
-				type="submit"
-				class="btn variant-filled-primary text-white"
+				type="button"
+				class="btn variant-filled-primary text-white font-semibold"
 				onclick={() => goto('/subscriptions/new')}
 			>
-				Add Item
+				+ {$t('common_add', 'Add Item')}
 			</button>
 		</header>
 		<!-- Responsive Container (recommended) -->
@@ -80,13 +83,14 @@
 				<thead>
 					<tr>
 						<th>ID</th>
-						<th>Name</th>
-						<th>Expires At</th>
-						<th>Billing Cycle</th>
-						<th>Services</th>
-						<th>Amount Paid</th>
-						<th>Status</th>
-						<th>Action</th>
+						<th>{$t('gate_member_name', 'Name')}</th>
+						<th>{$t('sub_sessions_badge', 'Sessions')}</th>
+						<th>{$t('gate_expires_at', 'Expires At')}</th>
+						<th>{$t('sub_package', 'Billing Cycle')}</th>
+						<th>{$t('nav_services', 'Services')}</th>
+						<th>{$t('common_total', 'Amount Paid')}</th>
+						<th>{$t('gate_status', 'Status')}</th>
+						<th>{$t('common_actions', 'Action')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -94,21 +98,32 @@
 						<tr>
 							<td>{item.id}</td>
 							<td>
-								<a href={`/subscriptions/${item.id}`} class="font-bold"
+								<a href={`/subscriptions/${item.id}`} class="font-bold text-primary-600 hover:underline"
 									>{item.user.name}</a
 								>
+							</td>
+							<td>
+								{#if item.total_sessions !== null && item.total_sessions !== undefined}
+									<span class="badge {item.remaining_sessions <= 0 ? 'variant-filled-error' : item.remaining_sessions <= 3 ? 'variant-filled-warning' : 'variant-filled-success'} font-bold">
+										🎟️ {item.remaining_sessions ?? 0} / {item.total_sessions}
+									</span>
+								{:else}
+									<span class="badge variant-soft-primary">
+										♾️ {$t('gate_unlimited_sessions', 'Unlimited')}
+									</span>
+								{/if}
 							</td>
 							<td>
 								{moment(item.expires_at).format('LL')}
 							</td>
 							<td>
-								{item.package.cycle.name}
+								{item.package?.cycle?.name || '-'}
 							</td>
 							<td>
-								{item.package.services.length}
+								{item.package?.services?.length || 0}
 							</td>
 							<td>
-								{parseFloat(item.package.amount).toFixed(2)}
+								{parseFloat(item.package?.amount || 0).toFixed(2)}
 							</td>
 							<td>
 								<Status status={item.status} />
@@ -116,19 +131,21 @@
 							<td>
 								<button
 									type="button"
-									class="btn-icon variant-filled-primary"
+									class="btn-icon btn-icon-sm variant-filled-primary mr-1"
 									onclick={() => onEdit(item.id)}
+									title={$t('common_edit', 'Edit')}
 								>
-									<span class="h-4 w-4 text-white">
+									<span class="h-3.5 w-3.5 text-white">
 										<EditIcon />
 									</span>
 								</button>
 								<button
 									type="button"
-									class="btn-icon variant-filled-error"
+									class="btn-icon btn-icon-sm variant-filled-error"
 									onclick={() => onDelete(item.id)}
+									title={$t('common_delete', 'Delete')}
 								>
-									<span class="h-4 w-4 text-white">
+									<span class="h-3.5 w-3.5 text-white">
 										<DeleteIcon />
 									</span>
 								</button>

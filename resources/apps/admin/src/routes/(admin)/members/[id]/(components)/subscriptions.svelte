@@ -11,6 +11,7 @@
 	import { useToast } from '$lib/toast';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { onDestroy, onMount } from 'svelte';
+	import { t, dir } from '$lib/i18n.js';
 
 	let subscriptions = [];
 	let loading = false;
@@ -106,12 +107,14 @@
 	};
 </script>
 
-<div class="flex flex-col">
-	<div class="mb-4 flex items-center">
-		<h3 class="h3 mb-4">Member Subscriptions</h3>
-		<div class="flex-1"></div>
-		<a href="/" onclick={prevent(onAddSubscription)} class="variant-filled btn">
-			Add Subscription
+<div class="flex flex-col" dir={$dir}>
+	<div class="mb-4 flex items-center justify-between">
+		<h3 class="h3 flex items-center gap-2">
+			<span>🎟️</span>
+			<span>{$t('nav_subscriptions', 'Member Subscriptions')}</span>
+		</h3>
+		<a href="/" onclick={prevent(onAddSubscription)} class="variant-filled-primary btn font-semibold shadow">
+			+ {$t('common_add', 'Add')} {$t('nav_subscriptions', 'Subscription')}
 		</a>
 	</div>
 
