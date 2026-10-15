@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
         if ($package) {
             // 1. Mohamed Ahmed: 12 sessions total, 10 remaining, expires in 30 days
             $mohamed = \App\Models\User::where('email', 'member@laragym.com')->first();
-            if ($mohamed) {
+            if ($mohamed && !\App\Models\Subscription::where('user_id', $mohamed->id)->exists()) {
                 \App\Models\Subscription::create([
                     'user_id' => $mohamed->id,
                     'package_id' => $package->id,
@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
 
             // 2. Sara Karim: Unlimited sessions, expires in 60 days
             $sara = \App\Models\User::where('email', 'sara@laragym.com')->first();
-            if ($sara) {
+            if ($sara && !\App\Models\Subscription::where('user_id', $sara->id)->exists()) {
                 \App\Models\Subscription::create([
                     'user_id' => $sara->id,
                     'package_id' => $package->id,
@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
 
             // 3. Yassine: Completed all 12 sessions (0 remaining)
             $yassine = \App\Models\User::where('email', 'yassine@laragym.com')->first();
-            if ($yassine) {
+            if ($yassine && !\App\Models\Subscription::where('user_id', $yassine->id)->exists()) {
                 \App\Models\Subscription::create([
                     'user_id' => $yassine->id,
                     'package_id' => $package->id,
@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
 
             // 4. Khaled: Date expired 5 days ago, though had remaining sessions
             $khaled = \App\Models\User::where('email', 'khaled@laragym.com')->first();
-            if ($khaled) {
+            if ($khaled && !\App\Models\Subscription::where('user_id', $khaled->id)->exists()) {
                 \App\Models\Subscription::create([
                     'user_id' => $khaled->id,
                     'package_id' => $package->id,

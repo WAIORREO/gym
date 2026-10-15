@@ -13,60 +13,68 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        User::truncate();
+        User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'Admin',
+                'is_admin' => true,
+                'status' => 'active',
+                'password' => bcrypt('password'),
+                'account_number' => '100000000001',
+                'avatar' => null
+            ]
+        );
 
-        User::create([
-            'id' => 1,
-            'name' => 'Admin',
-            'email' => 'admin@admin.com',
-            'is_admin' => true,
-            'password' => bcrypt('password'),
-            'account_number' => '100000000001',
-            'avatar' => null
-        ]);
+        User::firstOrCreate(
+            ['email' => 'member@laragym.com'],
+            [
+                'name' => 'محمد أحمد (عضو تجريبي)',
+                'is_admin' => false,
+                'status' => 'active',
+                'password' => bcrypt('password'),
+                'rfid_card_id' => 'RFID123456',
+                'account_number' => '000000000101',
+                'avatar' => null
+            ]
+        );
 
-        User::create([
-            'name' => 'محمد أحمد (عضو تجريبي)',
-            'email' => 'member@laragym.com',
-            'is_admin' => false,
-            'status' => 'active',
-            'password' => bcrypt('password'),
-            'rfid_card_id' => 'RFID123456',
-            'account_number' => '000000000101',
-            'avatar' => null
-        ]);
+        User::firstOrCreate(
+            ['email' => 'sara@laragym.com'],
+            [
+                'name' => 'سارة كريم (عضو نشط)',
+                'is_admin' => false,
+                'status' => 'active',
+                'password' => bcrypt('password'),
+                'rfid_card_id' => 'RFID654321',
+                'account_number' => '000000000102',
+                'avatar' => null
+            ]
+        );
 
-        User::create([
-            'name' => 'سارة كريم (عضو نشط)',
-            'email' => 'sara@laragym.com',
-            'is_admin' => false,
-            'status' => 'active',
-            'password' => bcrypt('password'),
-            'rfid_card_id' => 'RFID654321',
-            'account_number' => '000000000102',
-            'avatar' => null
-        ]);
+        User::firstOrCreate(
+            ['email' => 'yassine@laragym.com'],
+            [
+                'name' => 'ياسين بن علي (حصصه مكتملة)',
+                'is_admin' => false,
+                'status' => 'active',
+                'password' => bcrypt('password'),
+                'rfid_card_id' => 'RFID_DEPLETED',
+                'account_number' => '000000000103',
+                'avatar' => null
+            ]
+        );
 
-        User::create([
-            'name' => 'ياسين بن علي (حصصه مكتملة)',
-            'email' => 'yassine@laragym.com',
-            'is_admin' => false,
-            'status' => 'active',
-            'password' => bcrypt('password'),
-            'rfid_card_id' => 'RFID_DEPLETED',
-            'account_number' => '000000000103',
-            'avatar' => null
-        ]);
-
-        User::create([
-            'name' => 'خالد مراد (اشتراك منتهي المدة)',
-            'email' => 'khaled@laragym.com',
-            'is_admin' => false,
-            'status' => 'active',
-            'password' => bcrypt('password'),
-            'rfid_card_id' => 'RFID_EXPIRED',
-            'account_number' => '000000000104',
-            'avatar' => null
-        ]);
+        User::firstOrCreate(
+            ['email' => 'khaled@laragym.com'],
+            [
+                'name' => 'خالد مراد (اشتراك منتهي المدة)',
+                'is_admin' => false,
+                'status' => 'active',
+                'password' => bcrypt('password'),
+                'rfid_card_id' => 'RFID_EXPIRED',
+                'account_number' => '000000000104',
+                'avatar' => null
+            ]
+        );
     }
 }
