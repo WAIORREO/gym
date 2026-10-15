@@ -4,6 +4,8 @@
 	import { getBearerToken, useApi, getErrorMessage } from '$lib/api';
 	import { getAvatarUrl } from '$lib/avatar';
 	import { playAccessGrantedSound, playAccessDeniedSound } from '$lib/audio';
+	import { t, currentLang, dir } from '$lib/i18n.js';
+	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
 	import moment from 'moment';
 
 	import FaCheck from 'svelte-icons/fa/FaCheck.svelte';
@@ -52,11 +54,28 @@
 	let countdownInterval = null;
 	let hiddenInputRef = null;
 
-	// Update Clock
+	// Update Clock with bilingual Intl formatting
 	const updateClock = () => {
-		const now = moment();
-		currentTime = now.format('HH:mm:ss');
-		currentDate = now.format('dddd, D MMMM YYYY');
+		const now = new Date();
+		const locale = $currentLang === 'ar' ? 'ar-DZ' : 'fr-FR';
+		try {
+			currentTime = new Intl.DateTimeFormat(locale, {
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit',
+				hour12: false
+			}).format(now);
+
+			currentDate = new Intl.DateTimeFormat(locale, {
+				weekday: 'long',
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric'
+			}).format(now);
+		} catch (e) {
+			currentTime = moment().format('HH:mm:ss');
+			currentDate = moment().format('dddd, D MMMM YYYY');
+		}
 	};
 
 	// Reset to idle
@@ -110,14 +129,24 @@
 			loadRecentCheckins();
 			loadStats();
 
-			// Auto reset after 4.5 seconds
+			// Auto reset after 5 seconds
 			startResetCountdown(5);
 		} catch (error) {
 			const res = error.response ? error.response.data : null;
+			const statusCode = res?.status_code || 'ERROR';
+
+			// Bilingual error message selection
+			let displayMsg = res?.message || getErrorMessage(error) || $t('gate_access_denied', 'حدث خطأ');
+			if ($currentLang === 'fr') {
+				if (statusCode === 'CARD_NOT_FOUND') displayMsg = $t('gate_card_not_registered');
+				else if (statusCode === 'USER_INACTIVE') displayMsg = $t('gate_account_inactive');
+				else if (statusCode === 'SUBSCRIPTION_EXPIRED') displayMsg = $t('gate_sub_expired');
+				else if (res?.message_en) displayMsg = res.message_en;
+			}
+
 			errorData = {
-				statusCode: res?.status_code || 'ERROR',
-				message: res?.message || getErrorMessage(error) || 'حدث خطأ أثناء معالجة البطاقة',
-				messageEn: res?.message_en || 'Error processing card',
+				statusCode,
+				message: displayMsg,
 				scannedCode: cardCode,
 				member: res?.member || null,
 				lastSubscription: res?.last_subscription || null
@@ -254,7 +283,7 @@
 
 <div
 	class="gate-container flex min-h-[calc(100vh-65px)] flex-col bg-slate-950 text-slate-100 selection:bg-primary-500"
-	dir="rtl"
+	dir={$dir}
 >
 	<!-- Top Bar / Kiosk Header -->
 	<header
@@ -269,7 +298,7 @@
 					></span>
 					<span class="relative inline-flex h-3.5 w-3.5 rounded-full bg-emerald-500"></span>
 				</span>
-				<span class="text-sm font-semibold tracking-wide text-emerald-400">بوابة الدخول متصلة</span>
+				<span class="text-sm font-semibold tracking-wide text-emerald-400">{$t('gate_waiting_title', 'بوابة الدخول متصلة')}</span>
 			</div>
 
 			<div class="h-4 w-px bg-slate-700"></div>
@@ -303,15 +332,17 @@
 			</div>
 		</div>
 
-		<!-- Right: Tools, Mute, Fullscreen, Counter -->
+		<!-- Right: Tools, Mute, Fullscreen, Counter, Language -->
 		<div class="flex items-center gap-3">
+			<LanguageSwitcher />
+
 			<div
 				class="flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-800/80 px-3.5 py-1 text-sm font-semibold text-slate-200"
 			>
 				<div class="h-3.5 w-3.5 text-emerald-400">
 					<FaUserCheck />
 				</div>
-				<span>دخول اليوم:</span>
+				<span>{$t('gate_today_checkins', 'دخول اليوم')}:</span>
 				<span class="font-mono font-bold text-emerald-400">{todayCount}</span>
 			</div>
 
@@ -319,7 +350,7 @@
 			<button
 				type="button"
 				class="btn-icon btn-icon-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
-				title={soundEnabled ? 'كتم الصوت' : 'تفعيل الصوت'}
+				title={soundEnabled ? $t('gate_sound_muted', 'كتم الصوت') : $t('gate_sound_on', 'تفعيل الصوت')}
 				onclick={() => (soundEnabled = !soundEnabled)}
 			>
 				<div class="h-4 w-4">
@@ -335,7 +366,7 @@
 			<button
 				type="button"
 				class="btn-icon btn-icon-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
-				title="وضع ملء الشاشة (Kiosk)"
+				title={$t('gate_fullscreen', 'ملء الشاشة')}
 				onclick={toggleFullscreen}
 			>
 				<div class="h-4 w-4">
@@ -376,10 +407,10 @@
 					</div>
 
 					<h1 class="text-3xl font-black tracking-tight text-white lg:text-4xl">
-						مرر بطاقة العضوية أو السوار الذكي
+						{$t('gate_waiting_title', 'مرر بطاقة العضوية أو السوار الذكي')}
 					</h1>
 					<p class="mt-2 text-base font-medium text-slate-400">
-						Please tap your RFID card, wristband or key fob to unlock gate
+						{$t('gate_waiting_subtitle', 'Please tap your RFID card, wristband or key fob to unlock gate')}
 					</p>
 
 					<!-- Manual Search Form (for receptionist or forgotten card) -->
@@ -396,33 +427,33 @@
 							id="manual-search-input"
 							type="text"
 							bind:value={manualInput}
-							placeholder="أو أدخل رقم البطاقة / رقم حساب العضو..."
+							placeholder={$t('gate_manual_placeholder', 'أو أدخل رقم البطاقة / رقم حساب العضو...')}
 							class="w-full bg-transparent px-2 py-1 text-sm text-white placeholder-slate-500 focus:outline-none"
 						/>
 						<button
 							type="submit"
 							class="btn btn-sm rounded-xl bg-primary-600 font-semibold text-white shadow-md hover:bg-primary-500"
 						>
-							تحقق
+							{$t('gate_check_btn', 'تحقق')}
 						</button>
 					</form>
 
 					<!-- Quick Test Helper Pills -->
 					<div class="mt-8 flex flex-wrap items-center justify-center gap-2">
-						<span class="text-xs text-slate-500">تجربة سريعة:</span>
+						<span class="text-xs text-slate-500">{$t('gate_test_title', 'تجربة سريعة')}:</span>
 						<button
 							type="button"
 							class="badge border border-emerald-500/30 bg-emerald-500/10 text-xs font-mono text-emerald-300 hover:bg-emerald-500/20"
 							onclick={() => processCheckIn('RFID123456')}
 						>
-							بطاقة صالحة (RFID123456)
+							{$t('gate_test_active', 'بطاقة صالحة')} (RFID123456)
 						</button>
 						<button
 							type="button"
 							class="badge border border-rose-500/30 bg-rose-500/10 text-xs font-mono text-rose-300 hover:bg-rose-500/20"
 							onclick={() => processCheckIn('UNKNOWN_999')}
 						>
-							بطاقة غير مسجلة
+							{$t('gate_test_unregistered', 'بطاقة غير مسجلة')}
 						</button>
 					</div>
 				</div>
@@ -433,7 +464,7 @@
 					<div class="h-16 w-16 animate-spin text-primary-400">
 						<FaSyncAlt />
 					</div>
-					<h2 class="mt-6 text-2xl font-bold text-white">جاري التحقق من صلاحية العضوية...</h2>
+					<h2 class="mt-6 text-2xl font-bold text-white">{$t('gate_scanning', 'جاري التحقق من صلاحية العضوية...')}</h2>
 				</div>
 
 			<!-- STATE 3: ACCESS GRANTED (SUCCESS) -->
@@ -448,7 +479,7 @@
 						<div class="h-5 w-5">
 							<FaCheck />
 						</div>
-						<span class="text-lg">تم السماح بالدخول — البوابة مفتوحة</span>
+						<span class="text-lg">{$t('gate_access_granted', 'تم السماح بالدخول')}</span>
 					</div>
 
 					<!-- Member Avatar -->
@@ -484,21 +515,21 @@
 						{memberData.member.name}
 					</h2>
 					<div class="mt-1 flex items-center gap-3 font-mono text-sm text-slate-400">
-						<span>رقم العضو: {memberData.member.account_number}</span>
+						<span>{$t('gate_account_num', 'رقم العضو')}: {memberData.member.account_number}</span>
 						<span>•</span>
-						<span class="text-emerald-400">بطاقة: {memberData.member.rfid_card_id || 'RFID'}</span>
+						<span class="text-emerald-400">{$t('gate_rfid_card', 'بطاقة')}: {memberData.member.rfid_card_id || 'RFID'}</span>
 					</div>
 
 					<!-- Subscription Info Cards -->
 					<div class="mt-6 grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
 						<div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-4">
-							<div class="text-xs text-slate-400">الباقة الحالية</div>
+							<div class="text-xs text-slate-400">{$t('gate_package', 'الباقة الحالية')}</div>
 							<div class="mt-1 text-base font-bold text-white">
 								{memberData.subscription.package_name}
 							</div>
 						</div>
 						<div class="rounded-2xl border border-slate-800 bg-slate-900/90 p-4">
-							<div class="text-xs text-slate-400">تاريخ الانتهاء</div>
+							<div class="text-xs text-slate-400">{$t('gate_expires_at', 'تاريخ الانتهاء')}</div>
 							<div class="mt-1 font-mono text-base font-bold text-white">
 								{memberData.subscription.expires_at}
 							</div>
@@ -506,29 +537,31 @@
 						<div
 							class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-300"
 						>
-							<div class="text-xs text-emerald-400">الأيام المتبقية</div>
+							<div class="text-xs text-emerald-400">{$t('gate_days_left', 'الأيام المتبقية')}</div>
 							<div class="mt-1 font-mono text-xl font-black">
 								{memberData.subscription.days_left !== null
-									? `${memberData.subscription.days_left} يوم`
-									: 'مفتوح'}
+									? `${memberData.subscription.days_left} ${$t('gate_days', 'يوم')}`
+									: $t('gate_active', 'مفتوح')}
 							</div>
 						</div>
 					</div>
 
 					<!-- Message -->
 					<div class="mt-6 text-base font-semibold text-emerald-400">
-						{memberData.message}
+						{$currentLang === 'fr' 
+							? ($t('gate_verified_success')) 
+							: (memberData.message || $t('gate_verified_success'))}
 					</div>
 
 					<!-- Auto Reset Bar -->
 					<div class="mt-8 flex w-full items-center justify-between text-xs text-slate-500">
-						<span>إعادة تعيين الشاشة خلال {countdownSeconds} ثوانٍ...</span>
+						<span>{$t('gate_auto_reset', 'إعادة تعيين الشاشة خلال')} {countdownSeconds} {$t('gate_seconds', 'ثوانٍ')}...</span>
 						<button
 							type="button"
 							class="text-xs text-slate-400 underline hover:text-white"
 							onclick={resetToIdle}
 						>
-							عودة الآن
+							{$t('gate_reset', 'عودة الآن')}
 						</button>
 					</div>
 				</div>
@@ -547,7 +580,7 @@
 						</div>
 					</div>
 
-					<h2 class="text-3xl font-black text-rose-400">تم رفض الدخول — البوابة مغلقة</h2>
+					<h2 class="text-3xl font-black text-rose-400">{$t('gate_access_denied', 'تم رفض الدخول')}</h2>
 
 					<!-- Reason Banner -->
 					<div
@@ -578,29 +611,29 @@
 							</div>
 							<div class="flex-1">
 								<div class="text-lg font-bold text-white">{errorData.member.name}</div>
-								<div class="text-xs text-slate-400">رقم الحساب: {errorData.member.account_number}</div>
+								<div class="text-xs text-slate-400">{$t('gate_account_num', 'رقم الحساب')}: {errorData.member.account_number}</div>
 							</div>
 							{#if errorData.lastSubscription}
 								<div class="rounded-lg bg-rose-950/60 px-3 py-1 text-xs text-rose-300">
-									انتهى في: {errorData.lastSubscription.expires_at}
+									{$t('gate_expired', 'انتهى في')}: {errorData.lastSubscription.expires_at}
 								</div>
 							{/if}
 						</div>
 					{:else}
 						<div class="mt-4 font-mono text-sm text-slate-400">
-							رمز البطاقة المقروءة: <span class="text-white">{errorData.scannedCode}</span>
+							{$t('gate_rfid_card', 'رمز البطاقة')}: <span class="text-white">{errorData.scannedCode}</span>
 						</div>
 					{/if}
 
 					<!-- Auto Reset Bar -->
 					<div class="mt-8 flex w-full items-center justify-between text-xs text-slate-500">
-						<span>إعادة تعيين الشاشة خلال {countdownSeconds} ثوانٍ...</span>
+						<span>{$t('gate_auto_reset', 'إعادة تعيين الشاشة خلال')} {countdownSeconds} {$t('gate_seconds', 'ثوانٍ')}...</span>
 						<button
 							type="button"
 							class="text-xs text-slate-400 underline hover:text-white"
 							onclick={resetToIdle}
 						>
-							عودة الآن
+							{$t('gate_reset', 'عودة الآن')}
 						</button>
 					</div>
 				</div>
@@ -616,12 +649,12 @@
 					<div class="h-4 w-4 text-emerald-400">
 						<FaClock />
 					</div>
-					<h3 class="text-base font-bold text-white">سجل الدخول اللحظي</h3>
+					<h3 class="text-base font-bold text-white">{$t('gate_recent_feed', 'سجل الدخول اللحظي')}</h3>
 				</div>
 				<button
 					type="button"
 					class="btn-icon btn-icon-xs text-slate-400 hover:text-white"
-					title="تحديث السجل"
+					title={$t('gate_reset', 'تحديث')}
 					onclick={() => {
 						loadRecentCheckins();
 						loadStats();
@@ -639,7 +672,7 @@
 						<div class="h-8 w-8 text-slate-600">
 							<FaIdCard />
 						</div>
-						<p class="mt-2 text-sm">لا توجد عمليات دخول مسجلة اليوم حتى الآن</p>
+						<p class="mt-2 text-sm">{$t('gate_no_checkins_yet', 'لا توجد عمليات دخول مسجلة اليوم حتى الآن')}</p>
 					</div>
 				{:else}
 					{#each recentCheckins as item (item.id)}
@@ -666,15 +699,15 @@
 								</div>
 								<div>
 									<div class="text-sm font-semibold text-white">
-										{item.user?.name || 'عضو غير معروف'}
+										{item.user?.name || $t('common_all', 'عضو غير معروف')}
 									</div>
 									<div class="text-xs text-slate-400">
-										{item.branch?.name || 'الفرع الرئيسي'}
+										{item.branch?.name || $t('gate_branch', 'الفرع الرئيسي')}
 									</div>
 								</div>
 							</div>
 							<div class="text-left font-mono text-xs text-emerald-400">
-								{moment(item.checked_in_at).format('hh:mm A')}
+								{new Date(item.checked_in_at).toLocaleTimeString($currentLang === 'ar' ? 'ar-DZ' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
 							</div>
 						</div>
 					{/each}

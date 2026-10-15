@@ -1,0 +1,272 @@
+// @ts-nocheck
+import { writable, derived } from 'svelte/store';
+
+// Default language: Arabic ('ar') or French ('fr')
+const initialLang = typeof window !== 'undefined' 
+    ? (localStorage.getItem('laragym_lang') || 'ar') 
+    : 'ar';
+
+export const currentLang = writable(initialLang);
+
+// Direction store: 'rtl' for Arabic, 'ltr' for French
+export const dir = derived(currentLang, ($lang) => ($lang === 'ar' ? 'rtl' : 'ltr'));
+
+export const translations = {
+    ar: {
+        // App
+        app_name: 'لارا جيم',
+        app_tagline: 'نظام إدارة الصالات الرياضية وبوابات الدخول الذكية',
+        lang_switch: 'Français',
+        lang_name: 'العربية',
+        lang_flag: '🇩🇿',
+
+        // Navigation
+        nav_dashboard: 'لوحة التحكم',
+        nav_activities: 'الأنشطة والعمليات',
+        nav_attendance: 'سجل الحضور',
+        nav_gate: 'بوابات الدخول (RFID)',
+        nav_members: 'الأعضاء والمشتركين',
+        nav_branches: 'الفروع والقاعات',
+        nav_subscriptions: 'الاشتراكات',
+        nav_packages: 'الباقات والعروض',
+        nav_services: 'الخدمات الرياضية',
+        nav_cycles: 'فترات التجديد',
+        nav_users: 'المستخدمين والمدراء',
+        nav_settings: 'الإعدادات',
+        nav_logout: 'تسجيل الخروج',
+
+        // Auth
+        login_title: 'تسجيل الدخول',
+        login_subtitle: 'يرجى إدخال بياناتك للمتابعة إلى النظام',
+        login_email: 'البريد الإلكتروني',
+        login_password: 'كلمة المرور',
+        login_btn: 'تسجيل الدخول',
+        login_btn_loading: 'جاري تسجيل الدخول...',
+        login_forgot: 'نسيت كلمة المرور؟',
+        login_success: 'تم تسجيل الدخول بنجاح! جاري التحويل...',
+        login_failed: 'فشل تسجيل الدخول، تأكد من صحة البريد أو كلمة المرور',
+        login_no_admin: 'هذا الحساب ليس لديه صلاحيات الإدارة',
+
+        // Gate Kiosk
+        gate_title: 'شاشة بوابات الدخول الذكية',
+        gate_subtitle: 'نظام التحقق الآلي والتحكم في الدخول عبر بطاقات RFID',
+        gate_kiosk_badge: 'وضع البوابات المباشر (KIOSK MODE)',
+        gate_waiting_title: 'البوابة جاهزة للعبور',
+        gate_waiting_subtitle: 'يرجى تمرير بطاقة الدخول الذكية (RFID) بالقرب من القارئ',
+        gate_scanning: 'جاري التحقق من البطاقة وبيانات الاشتراك...',
+        gate_access_granted: 'تم السماح بالدخول',
+        gate_access_denied: 'عذراً! تم رفض الدخول',
+        gate_verified_success: 'تم التحقق بنجاح، تفضل بالدخول وتمرين موفق!',
+        gate_already_checked_in: 'العضو سجل دخوله بالفعل منذ لحظات، تفضل بالدخول!',
+        gate_card_not_registered: 'البطاقة غير مسجلة في النظام! يرجى مراجعة موظف الاستقبال',
+        gate_account_inactive: 'حساب العضو غير نشط أو موقوف! يرجى مراجعة الإدارة',
+        gate_sub_expired: 'الاشتراك منتهي الصلاحية! يرجى تجديد الاشتراك للمتابعة',
+        gate_sub_none: 'لا يوجد اشتراك نشط لهذا العضو! يرجى مراجعة الاستقبال',
+
+        // Gate Member Card Details
+        gate_member_name: 'اسم العضو',
+        gate_account_num: 'رقم العضوية',
+        gate_rfid_card: 'رقم بطاقة RFID',
+        gate_status: 'حالة الحساب',
+        gate_package: 'الباقة الرياضية',
+        gate_cycle: 'النوع',
+        gate_expires_at: 'تاريخ الانتهاء',
+        gate_days_left: 'الأيام المتبقية',
+        gate_branch: 'القاعة / الفرع',
+        gate_checkin_time: 'وقت الدخول',
+        gate_day: 'يوم',
+        gate_days: 'أيام',
+        gate_active: 'نشط ومفعل',
+        gate_inactive: 'غير مفعل',
+        gate_expired: 'منتهي',
+
+        // Gate Controls
+        gate_sound_on: 'الصوت مفعل',
+        gate_sound_muted: 'الصوت مكتوم',
+        gate_fullscreen: 'ملء الشاشة',
+        gate_exit_fullscreen: 'إلغاء ملء الشاشة',
+        gate_reset: 'إعادة ضبط الشاشة',
+        gate_auto_reset: 'إعادة التهيؤ التلقائي خلال',
+        gate_seconds: 'ثانية',
+        gate_manual_placeholder: 'أدخل رقم البطاقة أو رقم العضو...',
+        gate_check_btn: 'فحص',
+        gate_test_title: 'اختبار تجريبي سريع',
+        gate_test_active: 'بطاقة نشطة (محمد أحمد)',
+        gate_test_second: 'بطاقة نشطة (سارة كريم)',
+        gate_test_unregistered: 'بطاقة غير مسجلة',
+
+        // Gate Stats & Feed
+        gate_today_stats: 'إحصائيات اليوم',
+        gate_today_checkins: 'إجمالي الدخول اليوم',
+        gate_current_hall: 'القاعة الحالية',
+        gate_select_branch: 'جميع الفروع والقاعات',
+        gate_recent_feed: 'آخر عمليات الدخول المسجلة اليوم',
+        gate_no_checkins_yet: 'لا توجد عمليات دخول مسجلة اليوم حتى الآن',
+
+        // Common
+        common_all: 'الكل',
+        common_search: 'بحث...',
+        common_save: 'حفظ',
+        common_cancel: 'إلغاء',
+        common_delete: 'حذف',
+        common_edit: 'تعديل',
+        common_add: 'إضافة',
+        common_actions: 'الإجراءات',
+        common_loading: 'جاري التحميل...',
+        common_success: 'تمت العملية بنجاح',
+        common_error: 'حدث خطأ ما',
+        common_name: 'الاسم',
+        common_email: 'البريد',
+        common_phone: 'الهاتف',
+        common_date: 'التاريخ',
+        common_time: 'الوقت',
+        common_total: 'الإجمالي'
+    },
+    fr: {
+        // App
+        app_name: 'LaraGym',
+        app_tagline: 'Système de gestion de salle de sport & contrôle d\'accès RFID',
+        lang_switch: 'العربية',
+        lang_name: 'Français',
+        lang_flag: '🇫🇷',
+
+        // Navigation
+        nav_dashboard: 'Tableau de bord',
+        nav_activities: 'Activités & Opérations',
+        nav_attendance: 'Présences',
+        nav_gate: 'Accès Portiques (RFID)',
+        nav_members: 'Adhérents & Membres',
+        nav_branches: 'Succursales & Salles',
+        nav_subscriptions: 'Abonnements',
+        nav_packages: 'Forfaits & Offres',
+        nav_services: 'Services sportifs',
+        nav_cycles: 'Cycles de facturation',
+        nav_users: 'Utilisateurs & Admins',
+        nav_settings: 'Paramètres',
+        nav_logout: 'Déconnexion',
+
+        // Auth
+        login_title: 'Connexion',
+        login_subtitle: 'Veuillez saisir vos identifiants pour accéder au système',
+        login_email: 'Adresse e-mail',
+        login_password: 'Mot de passe',
+        login_btn: 'Se connecter',
+        login_btn_loading: 'Connexion en cours...',
+        login_forgot: 'Mot de passe oublié ?',
+        login_success: 'Connexion réussie ! Redirection...',
+        login_failed: 'Échec de connexion, veuillez vérifier vos identifiants',
+        login_no_admin: 'Ce compte ne possède pas les privilèges administrateur',
+
+        // Gate Kiosk
+        gate_title: 'Contrôle d\'Accès Portiques Intelligents',
+        gate_subtitle: 'Vérification automatique et contrôle des entrées par badge RFID',
+        gate_kiosk_badge: 'MODE KIOSQUE EN DIRECT',
+        gate_waiting_title: 'Portique Prêt pour l\'Accès',
+        gate_waiting_subtitle: 'Veuillez scanner votre carte RFID près du lecteur',
+        gate_scanning: 'Vérification de la carte et du statut de l\'abonnement...',
+        gate_access_granted: 'Accès Autorisé',
+        gate_access_denied: 'Accès Refusé',
+        gate_verified_success: 'Vérification réussie, bienvenue et bonne séance !',
+        gate_already_checked_in: 'Passage déjà enregistré il y a quelques instants. Bienvenue !',
+        gate_card_not_registered: 'Badge non enregistré dans le système ! Veuillez voir la réception',
+        gate_account_inactive: 'Compte adhérent inactif ou suspendu ! Contactez la direction',
+        gate_sub_expired: 'Abonnement expiré ! Veuillez renouveler pour accéder à la salle',
+        gate_sub_none: 'Aucun abonnement actif trouvé pour cet adhérent',
+
+        // Gate Member Card Details
+        gate_member_name: 'Nom de l\'adhérent',
+        gate_account_num: 'N° Adhérent',
+        gate_rfid_card: 'N° Badge RFID',
+        gate_status: 'Statut du compte',
+        gate_package: 'Formule / Forfait',
+        gate_cycle: 'Durée',
+        gate_expires_at: 'Date d\'expiration',
+        gate_days_left: 'Jours restants',
+        gate_branch: 'Salle / Succursale',
+        gate_checkin_time: 'Heure de passage',
+        gate_day: 'jour',
+        gate_days: 'jours',
+        gate_active: 'Actif & En règle',
+        gate_inactive: 'Inactif',
+        gate_expired: 'Expiré',
+
+        // Gate Controls
+        gate_sound_on: 'Son activé',
+        gate_sound_muted: 'Son coupé',
+        gate_fullscreen: 'Plein écran',
+        gate_exit_fullscreen: 'Quitter plein écran',
+        gate_reset: 'Réinitialiser',
+        gate_auto_reset: 'Réinitialisation automatique dans',
+        gate_seconds: 'sec',
+        gate_manual_placeholder: 'Numéro de badge ou n° adhérent...',
+        gate_check_btn: 'Vérifier',
+        gate_test_title: 'Tests rapides de simulation',
+        gate_test_active: 'Badge actif (Mohamed Ahmed)',
+        gate_test_second: 'Badge actif (Sara Karim)',
+        gate_test_unregistered: 'Badge non reconnu',
+
+        // Gate Stats & Feed
+        gate_today_stats: 'Statistiques du jour',
+        gate_today_checkins: 'Total entrées aujourd\'hui',
+        gate_current_hall: 'Salle actuelle',
+        gate_select_branch: 'Toutes les succursales',
+        gate_recent_feed: 'Derniers passages enregistrés aujourd\'hui',
+        gate_no_checkins_yet: 'Aucun passage enregistré pour le moment',
+
+        // Common
+        common_all: 'Tous',
+        common_search: 'Rechercher...',
+        common_save: 'Enregistrer',
+        common_cancel: 'Annuler',
+        common_delete: 'Supprimer',
+        common_edit: 'Modifier',
+        common_add: 'Ajouter',
+        common_actions: 'Actions',
+        common_loading: 'Chargement en cours...',
+        common_success: 'Opération réussie',
+        common_error: 'Une erreur s\'est produite',
+        common_name: 'Nom',
+        common_email: 'E-mail',
+        common_phone: 'Téléphone',
+        common_date: 'Date',
+        common_time: 'Heure',
+        common_total: 'Total'
+    }
+};
+
+// Reactive translation store
+export const t = derived(currentLang, ($lang) => {
+    return (key, fallback = '') => {
+        const langDict = translations[$lang] || translations.ar;
+        if (key in langDict) return langDict[key];
+        const arDict = translations.ar;
+        if (key in arDict) return arDict[key];
+        return fallback || key;
+    };
+});
+
+// Set language helper
+export function setLanguage(lang) {
+    if (lang !== 'ar' && lang !== 'fr') return;
+    currentLang.set(lang);
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('laragym_lang', lang);
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+    }
+}
+
+// Toggle between Arabic and French
+export function toggleLanguage() {
+    let newLang = 'ar';
+    currentLang.update((cur) => {
+        newLang = cur === 'ar' ? 'fr' : 'ar';
+        return newLang;
+    });
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('laragym_lang', newLang);
+        document.documentElement.setAttribute('lang', newLang);
+        document.documentElement.setAttribute('dir', newLang === 'ar' ? 'rtl' : 'ltr');
+    }
+    return newLang;
+}

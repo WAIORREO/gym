@@ -32,6 +32,8 @@ class GateController extends Controller
                 'access_granted' => false,
                 'status_code' => 'INVALID_INPUT',
                 'message' => 'يرجى تمرير بطاقة RFID أو إدخال رقم العضو',
+                'message_ar' => 'يرجى تمرير بطاقة RFID أو إدخال رقم العضو',
+                'message_fr' => 'Veuillez scanner une carte RFID ou saisir le numéro de membre',
                 'message_en' => 'Please scan an RFID card or enter member number'
             ], 422);
         }
@@ -47,6 +49,8 @@ class GateController extends Controller
                 'access_granted' => false,
                 'status_code' => 'CARD_NOT_FOUND',
                 'message' => 'البطاقة غير مسجلة في النظام! يرجى مراجعة موظف الاستقبال',
+                'message_ar' => 'البطاقة غير مسجلة في النظام! يرجى مراجعة موظف الاستقبال',
+                'message_fr' => 'Badge non enregistré dans le système ! Veuillez voir la réception',
                 'message_en' => 'RFID Card not registered. Please see reception',
                 'scanned_code' => $rfid
             ], 404);
@@ -59,6 +63,8 @@ class GateController extends Controller
                 'access_granted' => false,
                 'status_code' => 'USER_INACTIVE',
                 'message' => 'حساب العضو غير نشط أو موقوف! يرجى مراجعة إدارة النادي',
+                'message_ar' => 'حساب العضو غير نشط أو موقوف! يرجى مراجعة إدارة النادي',
+                'message_fr' => 'Compte membre inactif ou suspendu ! Veuillez contacter la direction',
                 'message_en' => 'Member account is suspended or inactive',
                 'member' => [
                     'id' => $user->id,
@@ -87,6 +93,12 @@ class GateController extends Controller
                 'message' => $expiredDate 
                     ? "اشتراكك منتهي منذ ($expiredDate)، يرجى التجديد للاستمرار"
                     : 'لا يوجد اشتراك نشط لهذا العضو، يرجى مراجعة الاستقبال',
+                'message_ar' => $expiredDate 
+                    ? "اشتراكك منتهي منذ ($expiredDate)، يرجى التجديد للاستمرار"
+                    : 'لا يوجد اشتراك نشط لهذا العضو، يرجى مراجعة الاستقبال',
+                'message_fr' => $expiredDate
+                    ? "Votre abonnement a expiré le ($expiredDate), veuillez le renouveler"
+                    : 'Aucun abonnement actif trouvé pour ce membre',
                 'message_en' => 'Subscription has expired or is not active',
                 'member' => [
                     'id' => $user->id,
@@ -154,6 +166,12 @@ class GateController extends Controller
             'message' => $alreadyCheckedIn 
                 ? 'تم تسجيل الدخول بالفعل منذ لحظات، تفضل بالدخول!'
                 : 'تم التحقق بنجاح، تفضل بالدخول وتمرين موفق!',
+            'message_ar' => $alreadyCheckedIn 
+                ? 'تم تسجيل الدخول بالفعل منذ لحظات، تفضل بالدخول!'
+                : 'تم التحقق بنجاح، تفضل بالدخول وتمرين موفق!',
+            'message_fr' => $alreadyCheckedIn
+                ? 'Passage déjà enregistré il y a quelques instants. Bienvenue !'
+                : 'Accès autorisé avec succès ! Bonne séance !',
             'message_en' => 'Access Granted! Enjoy your workout!',
             'already_checked_in' => $alreadyCheckedIn,
             'member' => [

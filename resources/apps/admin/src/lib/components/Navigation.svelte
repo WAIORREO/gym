@@ -14,6 +14,7 @@
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { t } from '$lib/i18n.js';
 
 	const drawerStore = getDrawerStore();
 
@@ -33,57 +34,58 @@
 		[
 			{
 				path: '/',
-				name: 'Dashboard',
+				name: $t('nav_dashboard', 'لوحة التحكم'),
 				icon: Dashboard
 			},
 			{
-				path: '/activities',
-				name: 'Activities',
-				icon: Activities
-			},
-			{
-				path: '/attendance',
-				name: 'Attendance',
-				icon: Attendance
-			},
-			{
 				path: '/gate',
-				name: 'Gate Access (RFID)',
-				icon: Gate
+				name: $t('nav_gate', 'بوابات الدخول (RFID)'),
+				icon: Gate,
+				highlight: true
 			},
 			{
 				path: '/members',
-				name: 'Members',
+				name: $t('nav_members', 'الأعضاء والمشتركين'),
 				icon: Members
 			},
 			{
+				path: '/attendance',
+				name: $t('nav_attendance', 'سجل الحضور'),
+				icon: Attendance
+			},
+			{
+				path: '/activities',
+				name: $t('nav_activities', 'الأنشطة والعمليات'),
+				icon: Activities
+			},
+			{
 				path: '/branches',
-				name: 'Branches',
+				name: $t('nav_branches', 'الفروع والقاعات'),
 				icon: Branches
 			},
 			{
 				path: '/subscriptions',
-				name: 'Subscriptions',
+				name: $t('nav_subscriptions', 'الاشتراكات'),
 				icon: Subscriptions
 			},
 			{
 				path: '/packages',
-				name: 'Packages',
+				name: $t('nav_packages', 'الباقات والعروض'),
 				icon: Packages
 			},
 			{
 				path: '/services',
-				name: 'Services',
+				name: $t('nav_services', 'الخدمات الرياضية'),
 				icon: Services
 			},
 			{
 				path: '/cycles',
-				name: 'Cycles',
+				name: $t('nav_cycles', 'فترات التجديد'),
 				icon: Cycles
 			},
 			{
 				path: '/logout',
-				name: 'Logout',
+				name: $t('nav_logout', 'تسجيل الخروج'),
 				icon: Logout
 			}
 		].map((v) => {

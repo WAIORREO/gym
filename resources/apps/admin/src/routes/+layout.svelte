@@ -11,6 +11,9 @@
 
 	import { initializeStores, Toast, Modal } from '@skeletonlabs/skeleton';
 
+	import { onMount } from 'svelte';
+	import { currentLang, dir } from '$lib/i18n.js';
+
 	initializeStores();
 
 	createDashboardStoreContext();
@@ -18,6 +21,16 @@
 	createAttendanceStoreContext();
 	createBranchStoreContext();
 	createMemberStoreContext();
+
+	onMount(() => {
+		const unsub = currentLang.subscribe((lang) => {
+			if (typeof document !== 'undefined') {
+				document.documentElement.setAttribute('lang', lang);
+				document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+			}
+		});
+		return unsub;
+	});
 
 	const { children } = $props();
 </script>

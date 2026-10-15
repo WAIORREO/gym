@@ -2,6 +2,8 @@
 	// @ts-nocheck
 	import { useToast } from '$lib/toast';
 	import axios from 'axios';
+	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
+	import { t, currentLang } from '$lib/i18n.js';
 
 	const toast = useToast();
 
@@ -17,7 +19,6 @@
 			const response = await axios.post('/login', fields);
 
 			if (response.data && response.data.success) {
-				// Store in localStorage as backup
 				if (response.data.access_token) {
 					try {
 						localStorage.setItem('access_token', response.data.access_token);
@@ -25,7 +26,7 @@
 				}
 
 				toast.trigger({
-					message: 'تم تسجيل الدخول بنجاح! جاري التحويل...',
+					message: $t('login_success', 'تم تسجيل الدخول بنجاح! جاري التحويل...'),
 					background: 'variant-filled-success'
 				});
 
@@ -34,7 +35,7 @@
 				}, 600);
 			} else {
 				toast.trigger({
-					message: response.data?.message || 'فشل تسجيل الدخول، تأكد من صحة البيانات',
+					message: response.data?.message || $t('login_failed', 'فشل تسجيل الدخول، تأكد من صحة البيانات'),
 					background: 'variant-filled-error'
 				});
 			}
@@ -42,7 +43,7 @@
 			const msg =
 				error.response?.data?.message ||
 				error.message ||
-				'تعذر تسجيل الدخول، تأكد من تشغيل سيرفر الـ API';
+				$t('login_failed', 'تعذر تسجيل الدخول، تأكد من تشغيل سيرفر الـ API');
 
 			toast.trigger({
 				message: msg,
@@ -54,17 +55,25 @@
 	};
 </script>
 
-<div class="mb-6">
-	<h3 class="h3">Account Login</h3>
-	<p>Please login to get started</p>
+<div class="mb-4 flex items-center justify-between">
+	<div class="flex items-center gap-2">
+		<span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+		<span class="text-xs font-semibold uppercase tracking-wider text-blue-400">{$t('app_name', 'LaraGym')}</span>
+	</div>
+	<LanguageSwitcher />
 </div>
 
-<form action="" onsubmit={onSubmit}>
-	<div class="mb-4">
+<div class="mb-6">
+	<h3 class="h3 font-bold text-white">{$t('login_title', 'تسجيل الدخول')}</h3>
+	<p class="text-sm text-surface-400">{$t('login_subtitle', 'يرجى إدخال بياناتك للمتابعة إلى النظام')}</p>
+</div>
+
+<form action="" onsubmit={onSubmit} class="space-y-4">
+	<div>
 		<label class="label">
-			<span>Email</span>
+			<span class="text-sm font-medium">{$t('login_email', 'البريد الإلكتروني')}</span>
 			<input
-				class="input"
+				class="input mt-1"
 				bind:value={fields.email}
 				name="email"
 				type="email"
@@ -75,11 +84,11 @@
 		</label>
 	</div>
 
-	<div class="mb-6">
+	<div>
 		<label class="label">
-			<span>Password</span>
+			<span class="text-sm font-medium">{$t('login_password', 'كلمة المرور')}</span>
 			<input
-				class="input"
+				class="input mt-1"
 				bind:value={fields.password}
 				name="password"
 				type="password"
@@ -93,14 +102,16 @@
 	<button
 		type="submit"
 		disabled={loading}
-		class="variant-filled-primary btn w-full font-bold text-white"
+		class="variant-filled-primary btn w-full font-bold text-white shadow-lg shadow-blue-900/30 transition-all hover:brightness-110 active:scale-[0.99]"
 	>
 		{#if loading}
-			جاري تسجيل الدخول...
+			{$t('login_btn_loading', 'جاري تسجيل الدخول...')}
 		{:else}
-			Login
+			{$t('login_btn', 'تسجيل الدخول')}
 		{/if}
 	</button>
 
-	<a href="/forgot" class="block pt-2 text-center">Forgot password</a>
+	<a href="/forgot" class="block pt-2 text-center text-xs text-surface-400 hover:text-white transition-colors">
+		{$t('login_forgot', 'نسيت كلمة المرور؟')}
+	</a>
 </form>

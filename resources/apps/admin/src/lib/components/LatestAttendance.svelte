@@ -7,6 +7,7 @@
 	import moment from 'moment';
 	import { Avatar } from '@skeletonlabs/skeleton';
 	import { getAvatarUrl } from '$lib/avatar';
+	import { t } from '$lib/i18n.js';
 
 	let loading = $state(false);
 
@@ -55,7 +56,7 @@
 
 <div class="card flex-1 flex-col bg-white shadow-lg lg:flex-row">
 	<div class="card-header border-b p-4">
-		<div class="flex-1 font-bold">Latest Attendance</div>
+		<div class="flex-1 font-bold">{$t('nav_attendance', 'سجل الحضور الأخير')}</div>
 	</div>
 	<div class="card-body p-4">
 		<!-- Responsive Container (recommended) -->
@@ -65,10 +66,10 @@
 				<table class="table-hover table bg-white">
 					<thead>
 						<tr>
-							<th>ID</th>
-							<th>Member</th>
-							<th>Description</th>
-							<th>Date</th>
+							<th>#</th>
+							<th>{$t('nav_members', 'العضو')}</th>
+							<th>{$t('common_actions', 'الوصف')}</th>
+							<th>{$t('common_date', 'التاريخ')}</th>
 						</tr>
 					</thead>
 					<tbody>

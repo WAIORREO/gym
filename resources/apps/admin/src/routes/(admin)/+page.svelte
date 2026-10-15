@@ -12,6 +12,7 @@
 	import MemberLogin from '$lib/components/MemberLogin.svelte';
 	import { getDashboardStoreContext } from '$lib/stores/dashboard.store.svelte';
 	import { getErrorMessage } from '$lib/api';
+	import { t } from '$lib/i18n.js';
 
 	const { loadInitialData, loading, statistics } = getDashboardStoreContext();
 
@@ -44,25 +45,25 @@
 			href="/subscriptions"
 			icon={SubscriptionIcon}
 			value={statistics.subscriptions}
-			title="Total Subscription"
+			title={$t('nav_subscriptions', 'إجمالي الاشتراكات')}
 		/>
 		<StatisticsCard
 			href="/services"
 			icon={ServicesIcon}
 			value={statistics.services}
-			title="Total Services"
+			title={$t('nav_services', 'إجمالي الخدمات')}
 		/>
 		<StatisticsCard
 			href="/packages"
 			icon={PackagesIcon}
 			value={statistics.packages}
-			title="Total Packages"
+			title={$t('nav_packages', 'إجمالي الباقات')}
 		/>
 		<StatisticsCard
 			href="/members"
 			icon={MembersIcon}
 			value={statistics.members}
-			title="Total Members"
+			title={$t('nav_members', 'إجمالي الأعضاء')}
 		/>
 	</div>
 	<div class="flex flex-col gap-6 lg:flex-row">
